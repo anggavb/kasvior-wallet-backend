@@ -56,3 +56,10 @@ func JSONCreated(ctx *gin.Context, data any, message string) {
 		Success: true,
 	})
 }
+
+func JSONNoContent(ctx *gin.Context) {
+	ctx.JSON(http.StatusNoContent, dto.Response{
+		Message: "No Content",
+		Success: true,
+	})
+}

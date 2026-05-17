@@ -19,6 +19,11 @@ type UserUpdateProfileResponse struct {
 	Photo       *string `json:"photo"`
 }
 
+type UserUpdatePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+}
+
 type UserDashboardInformationResponse struct {
 	Balance float64 `json:"balance"`
 	Income  float64 `json:"income"`

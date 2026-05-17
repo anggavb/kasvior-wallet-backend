@@ -58,6 +58,31 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	helper.JSONSuccess(ctx, res, "Update Profile Successfully")
 }
 
+func (uc *UserController) UpdatePassword(ctx *gin.Context) {
+	claims, ok := helper.CheckClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var body dto.UserUpdatePasswordRequest
+	if !helper.BindFormat(ctx, &body, binding.JSON) {
+		return
+	}
+
+	if err := uc.userService.UpdatePassword(ctx.Request.Context(), claims.UserId, body); err != nil {
+		if errors.Is(err, service.ErrInvalidPassword) {
+			helper.JSONUnauthorized(ctx, "Invalid current password")
+			return
+		}
+
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, nil, "Update Password Successfully")
+}
+
 func (uc *UserController) CheckPin(ctx *gin.Context) {
 	claims, ok := helper.CheckClaims(ctx)
 	if !ok {
@@ -72,11 +97,13 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 	res, err := uc.userService.CheckPin(ctx.Request.Context(), claims.UserId, body.Pin)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidPin) {
+			log.Println("Invalid PIN: ", err.Error())
 			helper.JSONUnauthorized(ctx, "Invalid PIN")
 			return
 		}
 		if errors.Is(err, service.ErrPinNotSet) {
-			helper.JSONBadRequest(ctx)
+			log.Println("PIN not set: ", err.Error())
+			helper.JSONAbortUnauthorized(ctx, "PIN not set")
 			return
 		}
 

@@ -16,8 +16,9 @@ type UserService struct {
 }
 
 var (
-	ErrPinNotSet  = errors.New("pin not set")
-	ErrInvalidPin = errors.New("invalid pin")
+	ErrPinNotSet       = errors.New("pin not set")
+	ErrInvalidPin      = errors.New("invalid pin")
+	ErrInvalidPassword = errors.New("invalid password")
 )
 
 func NewUserService(userRepository *repository.UserRepository) *UserService {
@@ -51,6 +52,23 @@ func (us *UserService) UpdateProfile(ctx context.Context, userId int, req dto.Us
 		PhoneNumber: user.PhoneNumber,
 		Photo:       user.Photo,
 	}, nil
+}
+
+func (us *UserService) UpdatePassword(ctx context.Context, userId int, req dto.UserUpdatePasswordRequest) error {
+	user, err := us.userRepository.GetPasswordById(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	var hash pkg.HashConfig
+	if err := hash.Compare(req.CurrentPassword, user.Password); err != nil {
+		return ErrInvalidPassword
+	}
+
+	hash.UseRecommended()
+	hashedPassword := hash.GenerateHash(req.NewPassword)
+
+	return us.userRepository.UpdatePasswordById(ctx, userId, hashedPassword)
 }
 
 func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dto.UserCheckPinResponse, error) {
