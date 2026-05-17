@@ -10,7 +10,6 @@ import (
 )
 
 func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
-
 	authRepo := repository.NewAuthRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
@@ -19,6 +18,7 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
 	userRouter := router.Group("/users", middleware.VerifyToken(authRepo))
 
 	userRouter.GET("/me", userController.GetProfile)
+	userRouter.PATCH("/me", userController.UpdateProfile)
 	userRouter.POST("/me/pin/check", userController.CheckPin)
 	userRouter.GET("/me/wallet", userController.GetDashboardInformation)
 	userRouter.GET("/me/transaction-report", userController.GetTransactionReport)

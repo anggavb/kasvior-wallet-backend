@@ -39,6 +39,20 @@ func (us *UserService) GetProfile(ctx context.Context, userId int) (dto.UserProf
 	}, nil
 }
 
+func (us *UserService) UpdateProfile(ctx context.Context, userId int, req dto.UserUpdateProfileRequest) (dto.UserUpdateProfileResponse, error) {
+	user, err := us.userRepository.UpdateProfileById(ctx, userId, req.Fullname, req.PhoneNumber, req.Photo)
+	if err != nil {
+		return dto.UserUpdateProfileResponse{}, err
+	}
+
+	return dto.UserUpdateProfileResponse{
+		Fullname:    user.Fullname,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
+		Photo:       user.Photo,
+	}, nil
+}
+
 func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dto.UserCheckPinResponse, error) {
 	user, err := us.userRepository.GetPinById(ctx, userId)
 	if err != nil {

@@ -6,6 +6,19 @@ type UserProfileResponse struct {
 	Photo    *string `json:"photo"`
 }
 
+type UserUpdateProfileRequest struct {
+	Fullname    *string `json:"fullname"`
+	PhoneNumber *string `json:"phone_number"`
+	Photo       *string `json:"photo"`
+}
+
+type UserUpdateProfileResponse struct {
+	Fullname    *string `json:"fullname"`
+	Email       string  `json:"email"`
+	PhoneNumber *string `json:"phone_number"`
+	Photo       *string `json:"photo"`
+}
+
 type UserDashboardInformationResponse struct {
 	Balance float64 `json:"balance"`
 	Income  float64 `json:"income"`

@@ -37,6 +37,27 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 	helper.JSONSuccess(ctx, res, "Get Profile Successfully")
 }
 
+func (uc *UserController) UpdateProfile(ctx *gin.Context) {
+	claims, ok := helper.CheckClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var body dto.UserUpdateProfileRequest
+	if !helper.BindFormat(ctx, &body, binding.JSON) {
+		return
+	}
+
+	res, err := uc.userService.UpdateProfile(ctx.Request.Context(), claims.UserId, body)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, res, "Update Profile Successfully")
+}
+
 func (uc *UserController) CheckPin(ctx *gin.Context) {
 	claims, ok := helper.CheckClaims(ctx)
 	if !ok {

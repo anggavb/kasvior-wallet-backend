@@ -50,6 +50,27 @@ func (ur *UserRepository) GetPinById(ctx context.Context, userId int) (model.Use
 	return user, nil
 }
 
+func (ur *UserRepository) UpdateProfileById(ctx context.Context, userId int, fullname, phoneNumber, photo *string) (model.User, error) {
+	sqlQuery := `
+		UPDATE users
+		SET
+			fullname = COALESCE($2, fullname),
+			phone_number = COALESCE($3, phone_number),
+			photo = COALESCE($4, photo),
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING fullname, email, phone_number, photo;
+	`
+	args := []any{userId, fullname, phoneNumber, photo}
+
+	var user model.User
+	if err := ur.db.QueryRow(ctx, sqlQuery, args...).Scan(&user.Fullname, &user.Email, &user.PhoneNumber, &user.Photo); err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
 func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userId int) (model.UserDashboardInformation, error) {
 	sqlQuery := `
 		SELECT
