@@ -83,6 +83,26 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 	helper.JSONSuccess(ctx, nil, "Update Password Successfully")
 }
 
+func (uc *UserController) UpdatePin(ctx *gin.Context) {
+	claims, ok := helper.CheckClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var body dto.UserUpdatePinRequest
+	if !helper.BindFormat(ctx, &body, binding.JSON) {
+		return
+	}
+
+	if err := uc.userService.UpdatePin(ctx.Request.Context(), claims.UserId, body); err != nil {
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, nil, "Update PIN Successfully")
+}
+
 func (uc *UserController) CheckPin(ctx *gin.Context) {
 	claims, ok := helper.CheckClaims(ctx)
 	if !ok {

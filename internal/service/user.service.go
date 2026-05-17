@@ -71,6 +71,10 @@ func (us *UserService) UpdatePassword(ctx context.Context, userId int, req dto.U
 	return us.userRepository.UpdatePasswordById(ctx, userId, hashedPassword)
 }
 
+func (us *UserService) UpdatePin(ctx context.Context, userId int, req dto.UserUpdatePinRequest) error {
+	return us.userRepository.UpdatePinById(ctx, userId, req.Pin)
+}
+
 func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dto.UserCheckPinResponse, error) {
 	user, err := us.userRepository.GetPinById(ctx, userId)
 	if err != nil {
@@ -81,15 +85,6 @@ func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dt
 	}
 
 	storedPin := strings.TrimSpace(*user.Pin)
-	if strings.HasPrefix(storedPin, "$argon2id$") {
-		var hash pkg.HashConfig
-		if err := hash.Compare(pin, storedPin); err != nil {
-			return dto.UserCheckPinResponse{}, ErrInvalidPin
-		}
-
-		return dto.UserCheckPinResponse{IsValid: true}, nil
-	}
-
 	if pin != storedPin {
 		return dto.UserCheckPinResponse{}, ErrInvalidPin
 	}

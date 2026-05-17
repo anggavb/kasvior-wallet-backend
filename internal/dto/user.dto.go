@@ -24,6 +24,10 @@ type UserUpdatePasswordRequest struct {
 	NewPassword     string `json:"new_password" binding:"required,min=8"`
 }
 
+type UserUpdatePinRequest struct {
+	Pin string `json:"pin" binding:"required,len=6"`
+}
+
 type UserDashboardInformationResponse struct {
 	Balance float64 `json:"balance"`
 	Income  float64 `json:"income"`

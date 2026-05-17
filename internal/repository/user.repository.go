@@ -101,6 +101,20 @@ func (ur *UserRepository) UpdatePasswordById(ctx context.Context, userId int, ha
 	return err
 }
 
+func (ur *UserRepository) UpdatePinById(ctx context.Context, userId int, pin string) error {
+	sqlQuery := `
+		UPDATE users
+		SET
+			pin = $2,
+			updated_at = NOW()
+		WHERE id = $1;
+	`
+	args := []any{userId, pin}
+
+	_, err := ur.db.Exec(ctx, sqlQuery, args...)
+	return err
+}
+
 func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userId int) (model.UserDashboardInformation, error) {
 	sqlQuery := `
 		SELECT
