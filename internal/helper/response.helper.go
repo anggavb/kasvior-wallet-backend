@@ -1,0 +1,58 @@
+package helper
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/kasvior-wallet-backend/internal/dto"
+)
+
+// Status 500 - Internal Server Error
+func JSONInternalServerError(ctx *gin.Context) {
+	ctx.JSON(http.StatusInternalServerError, dto.Response{
+		Message: "Error",
+		Error:   "Internal Server Error",
+	})
+}
+
+// Status 400 - Bad Request
+func JSONBadRequest(ctx *gin.Context) {
+	ctx.JSON(http.StatusBadRequest, dto.Response{
+		Message: "Invalid Request Payload",
+		Error:   "Bad Request",
+	})
+}
+
+// Status 401 - Unauthorized
+func JSONUnauthorized(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusUnauthorized, dto.Response{
+		Message: message,
+		Error:   "Unauthorized",
+	})
+}
+
+// Status 409 - Conflict
+func JSONDuplicate(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusConflict, dto.Response{
+		Message: message,
+		Error:   "Conflict",
+	})
+}
+
+// Status 200 - OK
+func JSONSuccess(ctx *gin.Context, data any, message string) {
+	ctx.JSON(http.StatusOK, dto.Response{
+		Data:    data,
+		Message: message,
+		Success: true,
+	})
+}
+
+// Status 201 - Created
+func JSONCreated(ctx *gin.Context, data any, message string) {
+	ctx.JSON(http.StatusCreated, dto.Response{
+		Data:    data,
+		Message: message,
+		Success: true,
+	})
+}
