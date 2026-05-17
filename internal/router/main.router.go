@@ -13,6 +13,7 @@ func InitRouter(router *gin.Engine, db *pgxpool.Pool) {
 	// router.Use(middleware.Logger)
 	// router.Use(middleware.CORSMiddleware)
 	AuthRouter(router, db)
+	UserRouter(router, db)
 
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, dto.Response{

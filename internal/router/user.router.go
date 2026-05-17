@@ -1,0 +1,21 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kasvior-wallet-backend/internal/controller"
+	"github.com/kasvior-wallet-backend/internal/middleware"
+	"github.com/kasvior-wallet-backend/internal/repository"
+	"github.com/kasvior-wallet-backend/internal/service"
+)
+
+func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
+	userRouter := router.Group("/users")
+
+	authRepo := repository.NewAuthRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+	userController := controller.NewUserController(userService)
+
+	userRouter.GET("/me", middleware.VerifyToken(authRepo), userController.GetProfile)
+}
