@@ -11,3 +11,9 @@ type UserDashboardInformationResponse struct {
 	Income  float64 `json:"income"`
 	Expense float64 `json:"expense"`
 }
+
+type UserTransactionReportResponse struct {
+	Day     string  `json:"day"`
+	Income  float64 `json:"income"`
+	Expense float64 `json:"expense"`
+}

@@ -20,3 +20,9 @@ type UserDashboardInformation struct {
 	Income  float64 `db:"income"`
 	Expense float64 `db:"expense"`
 }
+
+type UserTransactionReport struct {
+	Date    time.Time
+	Income  float64
+	Expense float64
+}

@@ -64,3 +64,38 @@ func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
 
 	helper.JSONSuccess(ctx, res, "Get Dashboard Information Successfully")
 }
+
+func (uc *UserController) GetTransactionReport(ctx *gin.Context) {
+	duration := ctx.DefaultQuery("duration", "7d")
+	if duration != "7d" {
+		helper.JSONBadRequest(ctx)
+		return
+	}
+
+	reportType := ctx.DefaultQuery("type", "all")
+	if reportType != "all" && reportType != "income" && reportType != "expense" {
+		helper.JSONBadRequest(ctx)
+		return
+	}
+
+	claimsValue, ok := ctx.Get("claims")
+	if !ok {
+		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return
+	}
+
+	claims, ok := claimsValue.(pkg.Claims)
+	if !ok {
+		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return
+	}
+
+	res, err := uc.userService.GetTransactionReport(ctx.Request.Context(), claims.UserId, reportType)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, res, "Get Transaction Report Successfully")
+}

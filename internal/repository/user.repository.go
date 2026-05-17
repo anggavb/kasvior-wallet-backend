@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/model"
@@ -64,4 +65,57 @@ func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userI
 	}
 
 	return dashboard, nil
+}
+
+func (ur *UserRepository) GetTransactionReportById(ctx context.Context, userId int, reportType string, startDate, endDate time.Time) ([]model.UserTransactionReport, error) {
+	sqlQuery := `
+		SELECT
+			t.created_at AS report_date,
+			SUM(
+				CASE
+					WHEN $2 IN ('all', 'income')
+						AND t.type IN ('topup', 'receiver')
+					THEN t.amount
+					ELSE 0
+				END
+			) AS income,
+			SUM(
+				CASE
+					WHEN $2 IN ('all', 'expense')
+						AND t.type = 'transfer'
+					THEN t.amount
+					ELSE 0
+				END
+			) AS expense
+		FROM transactions t
+		WHERE t.user_id = $1
+			AND t.status = 'success'
+			AND t.created_at >= $3
+			AND t.created_at < $4
+		GROUP BY t.created_at
+		ORDER BY t.created_at ASC;
+	`
+	args := []any{userId, reportType, startDate, endDate.AddDate(0, 0, 1)}
+
+	rows, err := ur.db.Query(ctx, sqlQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	reports := []model.UserTransactionReport{}
+	for rows.Next() {
+		var report model.UserTransactionReport
+		if err := rows.Scan(&report.Date, &report.Income, &report.Expense); err != nil {
+			return nil, err
+		}
+
+		reports = append(reports, report)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reports, nil
 }

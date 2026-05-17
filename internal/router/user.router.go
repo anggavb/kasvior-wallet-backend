@@ -20,4 +20,5 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	userRouter.GET("/me", userController.GetProfile)
 	userRouter.GET("/me/wallet", userController.GetDashboardInformation)
+	userRouter.GET("/me/transaction-report", userController.GetTransactionReport)
 }
