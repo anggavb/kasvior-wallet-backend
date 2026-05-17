@@ -10,7 +10,6 @@ import (
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/helper"
 	"github.com/kasvior-wallet-backend/internal/service"
-	"github.com/kasvior-wallet-backend/pkg"
 )
 
 type AuthController struct {
@@ -64,41 +63,13 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 }
 
 func (ac *AuthController) Logout(ctx *gin.Context) {
-	token, ok := ctx.Get("token")
+	tokenString, ok := helper.CheckAuthToken(ctx)
 	if !ok {
-		log.Println("Error: token not found in context")
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return
 	}
 
-	claimsValue, ok := ctx.Get("claims")
-	if !ok {
-		log.Println("Error: claims not found in context")
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	claims, ok := claimsValue.(pkg.Claims)
-	if !ok {
-		log.Println("Error: claims type assertion failed")
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	expiresAt, err := claims.GetExpirationTime()
-	if err != nil || expiresAt == nil {
-		if err != nil {
-			log.Println("Error: ", err.Error())
-		}
-		log.Println("Error: expiresAt is nil")
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	tokenString, ok := token.(string)
-	if !ok {
-		log.Println("Error: token type assertion failed")
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
+	expiresAt, err := helper.CheckExpiredToken(ctx)
+	if err != nil {
 		return
 	}
 

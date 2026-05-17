@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kasvior-wallet-backend/internal/helper"
 	"github.com/kasvior-wallet-backend/internal/service"
-	"github.com/kasvior-wallet-backend/pkg"
 )
 
 type UserController struct {
@@ -20,15 +19,8 @@ func NewUserController(userService *service.UserService) *UserController {
 }
 
 func (uc *UserController) GetProfile(ctx *gin.Context) {
-	claimsValue, ok := ctx.Get("claims")
+	claims, ok := helper.CheckClaims(ctx)
 	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	claims, ok := claimsValue.(pkg.Claims)
-	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return
 	}
 
@@ -43,15 +35,8 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 }
 
 func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
-	claimsValue, ok := ctx.Get("claims")
+	claims, ok := helper.CheckClaims(ctx)
 	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	claims, ok := claimsValue.(pkg.Claims)
-	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return
 	}
 
@@ -78,15 +63,8 @@ func (uc *UserController) GetTransactionReport(ctx *gin.Context) {
 		return
 	}
 
-	claimsValue, ok := ctx.Get("claims")
+	claims, ok := helper.CheckClaims(ctx)
 	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
-		return
-	}
-
-	claims, ok := claimsValue.(pkg.Claims)
-	if !ok {
-		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return
 	}
 

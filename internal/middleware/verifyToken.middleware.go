@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"log"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -16,19 +15,10 @@ import (
 
 func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		bearerToken := ctx.GetHeader("Authorization")
-		if bearerToken == "" {
-			helper.JSONAbortUnauthorized(ctx, "Unauthorized, please login!")
+		token, ok := helper.VerifyClientToken(ctx)
+		if !ok {
 			return
 		}
-
-		splittedBearer := strings.Split(bearerToken, " ")
-		if len(splittedBearer) != 2 {
-			helper.JSONAbortUnauthorized(ctx, "Unauthorized, please login!")
-			return
-		}
-
-		token := splittedBearer[1]
 
 		var claims pkg.Claims
 		if err := claims.VerifyJWT(token); err != nil {
@@ -43,14 +33,7 @@ func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 		}
 
 		isActive, err := authRepository.IsTokenActive(ctx.Request.Context(), hashToken(token))
-		if err != nil {
-			log.Println("Error: ", err.Error())
-			helper.JSONAbortUnauthorized(ctx, "Unauthorized, please login!")
-			return
-		}
-
-		if !isActive {
-			helper.JSONAbortUnauthorized(ctx, "Unauthorized, please login!")
+		if !helper.HandleTokenIsActive(ctx, isActive, err) {
 			return
 		}
 
