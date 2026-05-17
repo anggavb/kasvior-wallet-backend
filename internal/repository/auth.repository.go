@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/model"
@@ -55,4 +56,47 @@ func (ar *AuthRepository) GetUserByEmail(ctx context.Context, email string) (mod
 	}
 
 	return user, nil
+}
+
+func (ar *AuthRepository) SaveToken(ctx context.Context, tokenHash string, userId int, expiresAt time.Time) error {
+	sql := `
+		INSERT INTO active_tokens (token_hash, user_id, expires_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (token_hash)
+		DO UPDATE SET user_id = EXCLUDED.user_id, expires_at = EXCLUDED.expires_at;
+	`
+	args := []any{tokenHash, userId, expiresAt}
+
+	_, err := ar.db.Exec(ctx, sql, args...)
+	return err
+}
+
+func (ar *AuthRepository) DeleteToken(ctx context.Context, tokenHash string) error {
+	sql := `
+		DELETE FROM active_tokens
+		WHERE token_hash = $1;
+	`
+	args := []any{tokenHash}
+
+	_, err := ar.db.Exec(ctx, sql, args...)
+	return err
+}
+
+func (ar *AuthRepository) IsTokenActive(ctx context.Context, tokenHash string) (bool, error) {
+	sql := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM active_tokens
+			WHERE token_hash = $1
+				AND expires_at > NOW()
+		);
+	`
+	args := []any{tokenHash}
+
+	var isActive bool
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&isActive); err != nil {
+		return false, err
+	}
+
+	return isActive, nil
 }
