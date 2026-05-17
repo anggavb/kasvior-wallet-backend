@@ -1,0 +1,33 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/kasvior-wallet-backend/internal/config"
+	"github.com/kasvior-wallet-backend/internal/router"
+)
+
+func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading env. \ncause: %s", err.Error())
+	}
+
+	app := gin.Default()
+
+	conn, err := config.ConnectDB()
+	if err != nil {
+		log.Fatalf("DB connection error. \ncause: %s", err.Error())
+	}
+	defer conn.Close()
+	log.Println("DB Connected")
+
+	// install router
+	router.InitRouter(app, conn)
+
+	addr := fmt.Sprintf("%s:%s", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
+	app.Run(addr)
+}
