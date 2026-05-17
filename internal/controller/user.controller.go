@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"errors"
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/helper"
 	"github.com/kasvior-wallet-backend/internal/service"
 )
@@ -32,6 +35,36 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 	}
 
 	helper.JSONSuccess(ctx, res, "Get Profile Successfully")
+}
+
+func (uc *UserController) CheckPin(ctx *gin.Context) {
+	claims, ok := helper.CheckClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var body dto.UserCheckPinRequest
+	if !helper.BindFormat(ctx, &body, binding.JSON) {
+		return
+	}
+
+	res, err := uc.userService.CheckPin(ctx.Request.Context(), claims.UserId, body.Pin)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidPin) {
+			helper.JSONUnauthorized(ctx, "Invalid PIN")
+			return
+		}
+		if errors.Is(err, service.ErrPinNotSet) {
+			helper.JSONBadRequest(ctx)
+			return
+		}
+
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, res, "PIN Valid")
 }
 
 func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {

@@ -17,3 +17,11 @@ type UserTransactionReportResponse struct {
 	Income  float64 `json:"income"`
 	Expense float64 `json:"expense"`
 }
+
+type UserCheckPinRequest struct {
+	Pin string `json:"pin" binding:"required,len=6"`
+}
+
+type UserCheckPinResponse struct {
+	IsValid bool `json:"is_valid"`
+}

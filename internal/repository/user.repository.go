@@ -34,6 +34,22 @@ func (ur *UserRepository) GetProfileById(ctx context.Context, userId int) (model
 	return user, nil
 }
 
+func (ur *UserRepository) GetPinById(ctx context.Context, userId int) (model.User, error) {
+	sqlQuery := `
+		SELECT pin
+		FROM users
+		WHERE id = $1;
+	`
+	args := []any{userId}
+
+	var user model.User
+	if err := ur.db.QueryRow(ctx, sqlQuery, args...).Scan(&user.Pin); err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
 func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userId int) (model.UserDashboardInformation, error) {
 	sqlQuery := `
 		SELECT
