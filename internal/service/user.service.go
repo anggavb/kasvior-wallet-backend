@@ -29,3 +29,16 @@ func (us *UserService) GetProfile(ctx context.Context, userId int) (dto.UserProf
 		Photo:    profile.Photo,
 	}, nil
 }
+
+func (us *UserService) GetDashboardInformation(ctx context.Context, userId int) (dto.UserDashboardInformationResponse, error) {
+	dashboard, err := us.userRepository.GetDashboardInformationById(ctx, userId)
+	if err != nil {
+		return dto.UserDashboardInformationResponse{}, err
+	}
+
+	return dto.UserDashboardInformationResponse{
+		Balance: dashboard.Balance,
+		Income:  dashboard.Income,
+		Expense: dashboard.Expense,
+	}, nil
+}

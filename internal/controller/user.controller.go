@@ -41,3 +41,26 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 
 	helper.JSONSuccess(ctx, res, "Get Profile Successfully")
 }
+
+func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
+	claimsValue, ok := ctx.Get("claims")
+	if !ok {
+		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return
+	}
+
+	claims, ok := claimsValue.(pkg.Claims)
+	if !ok {
+		helper.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return
+	}
+
+	res, err := uc.userService.GetDashboardInformation(ctx.Request.Context(), claims.UserId)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		helper.JSONInternalServerError(ctx)
+		return
+	}
+
+	helper.JSONSuccess(ctx, res, "Get Dashboard Information Successfully")
+}
