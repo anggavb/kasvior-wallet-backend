@@ -15,12 +15,6 @@ func AuthRouter(router *gin.Engine, db *pgxpool.Pool) {
 	authService := service.NewAuthService(authRepo)
 	authController := controller.NewAuthController(authService)
 
-	// authRouter.POST("", authController.Login)
-	// authRouter.GET("/ping", func(c *gin.Context) {
-	// 	// Return JSON response
-	// 	c.JSON(http.StatusOK, gin.H{
-	// 		"message": "pong",
-	// 	})
-	// })
+	authRouter.POST("", authController.Login)
 	authRouter.POST("/register", authController.Register)
 }

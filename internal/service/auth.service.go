@@ -35,3 +35,25 @@ func (as *AuthService) RegisterUser(ctx context.Context, user dto.AuthRequest) (
 		CreatedAt: newUser.CreatedAt,
 	}, nil
 }
+
+func (as *AuthService) LoginUser(ctx context.Context, user dto.AuthRequest) (dto.AuthResponse, error) {
+	userLogin, err := as.authRepository.GetUserByEmail(ctx, user.Email)
+	if err != nil {
+		return dto.AuthResponse{}, err
+	}
+
+	var hash pkg.HashConfig
+	if err := hash.Compare(user.Password, userLogin.Password); err != nil {
+		return dto.AuthResponse{}, err
+	}
+
+	token, err := pkg.NewClaims(userLogin.Id, user.Email, userLogin.IsVerified).GenerateJWT()
+	if err != nil {
+		return dto.AuthResponse{}, err
+	}
+
+	return dto.AuthResponse{
+		Email: user.Email,
+		Token: token,
+	}, nil
+}
