@@ -10,17 +10,17 @@ import (
 	"github.com/kasvior-wallet-backend/internal/service"
 )
 
-type TransferController struct {
-	transferService *service.TransferService
+type TransactionController struct {
+	transactionService *service.TransactionService
 }
 
-func NewTransferController(transferService *service.TransferService) *TransferController {
-	return &TransferController{
-		transferService: transferService,
+func NewTransactionController(transactionService *service.TransactionService) *TransactionController {
+	return &TransactionController{
+		transactionService: transactionService,
 	}
 }
 
-func (tc *TransferController) FindReceivers(ctx *gin.Context) {
+func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 	claims, ok := helper.CheckClaims(ctx)
 	if !ok {
 		return
@@ -40,7 +40,7 @@ func (tc *TransferController) FindReceivers(ctx *gin.Context) {
 
 	search := strings.TrimSpace(ctx.DefaultQuery("search", ""))
 
-	res, err := tc.transferService.FindReceivers(ctx.Request.Context(), claims.UserId, search, page, limit)
+	res, err := tc.transactionService.FindReceivers(ctx.Request.Context(), claims.UserId, search, page, limit)
 	if err != nil {
 		log.Println("Error: ", err.Error())
 		helper.JSONInternalServerError(ctx)

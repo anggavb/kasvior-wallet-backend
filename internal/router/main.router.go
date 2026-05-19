@@ -15,7 +15,7 @@ func InitRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	AuthRouter(router, db)
 	UserRouter(router, db)
-	TransferRouter(router, db)
+	TransactionRouter(router, db)
 
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, dto.Response{

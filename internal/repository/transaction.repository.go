@@ -7,17 +7,17 @@ import (
 	"github.com/kasvior-wallet-backend/internal/model"
 )
 
-type TransferRepository struct {
+type TransactionRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewTransferRepository(db *pgxpool.Pool) *TransferRepository {
-	return &TransferRepository{
+func NewTransactionRepository(db *pgxpool.Pool) *TransactionRepository {
+	return &TransactionRepository{
 		db: db,
 	}
 }
 
-func (tr *TransferRepository) FindReceivers(ctx context.Context, userId int, search string, limit, offset int) ([]model.Receiver, error) {
+func (tr *TransactionRepository) FindReceivers(ctx context.Context, userId int, search string, limit, offset int) ([]model.Receiver, error) {
 	sqlQuery := `
 		SELECT id, photo, COALESCE(fullname, email) AS receiver, phone_number
 		FROM users
@@ -53,4 +53,7 @@ func (tr *TransferRepository) FindReceivers(ctx context.Context, userId int, sea
 	}
 
 	return receivers, nil
+}
+
+func (tr *TransactionRepository) AddTopupTransaction(ctx context.Context, userId, paymentMethodId, amount, discount, tax int, typeTransaction string) {
 }

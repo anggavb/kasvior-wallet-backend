@@ -7,20 +7,20 @@ import (
 	"github.com/kasvior-wallet-backend/internal/repository"
 )
 
-type TransferService struct {
-	transferRepository *repository.TransferRepository
+type TransactionService struct {
+	transactionRepository *repository.TransactionRepository
 }
 
-func NewTransferService(transferRepository *repository.TransferRepository) *TransferService {
-	return &TransferService{
-		transferRepository: transferRepository,
+func NewTransactionService(transactionRepository *repository.TransactionRepository) *TransactionService {
+	return &TransactionService{
+		transactionRepository: transactionRepository,
 	}
 }
 
-func (ts *TransferService) FindReceivers(ctx context.Context, userId int, search string, page, limit int) (dto.ReceiverListResponse, error) {
+func (ts *TransactionService) FindReceivers(ctx context.Context, userId int, search string, page, limit int) (dto.ReceiverListResponse, error) {
 	offset := (page - 1) * limit
 
-	receivers, err := ts.transferRepository.FindReceivers(ctx, userId, search, limit, offset)
+	receivers, err := ts.transactionRepository.FindReceivers(ctx, userId, search, limit, offset)
 	if err != nil {
 		return dto.ReceiverListResponse{}, err
 	}
