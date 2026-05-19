@@ -7,8 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
-// using generics data type for body parameter (belajar dari kelasnya pak eko pzn)
-func BindFormat[T any](ctx *gin.Context, requestData *T, binder binding.Binding) bool {
+func BindFormat(ctx *gin.Context, requestData any, binder binding.Binding) bool {
 	if err := ctx.ShouldBindWith(&requestData, binder); err != nil {
 		log.Println("Error", err.Error())
 		JSONBadRequest(ctx)
