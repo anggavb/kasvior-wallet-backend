@@ -14,7 +14,7 @@ import (
 )
 
 func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+	return func(ctx *gin.Context) { // closure function
 		token, ok := helper.VerifyClientToken(ctx)
 		if !ok {
 			return
@@ -38,7 +38,6 @@ func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 		}
 
 		ctx.Set("claims", claims)
-		ctx.Set("token", token)
 		ctx.Next()
 	}
 }
