@@ -12,10 +12,15 @@ import (
 func TransactionRouter(router *gin.Engine, db *pgxpool.Pool) {
 	authRepo := repository.NewAuthRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
-	transactionService := service.NewTransactionService(transactionRepo)
+	transactionService := service.NewTransactionService(transactionRepo, db)
 	transactionController := controller.NewTransactionController(transactionService)
 
 	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authRepo))
 
-	transactionRouter.GET("/transfer/receivers", transactionController.FindReceivers)
+	{ // use for scoping route
+		transferRouter := transactionRouter.Group("/transfer")
+
+		transferRouter.POST("/", transactionController.CreateTopup)
+		transferRouter.GET("/receivers", transactionController.FindReceivers)
+	}
 }

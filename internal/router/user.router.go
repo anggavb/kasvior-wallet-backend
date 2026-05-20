@@ -17,11 +17,15 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	userRouter := router.Group("/users", middleware.VerifyToken(authRepo))
 
-	userRouter.GET("/me", userController.GetProfile)
-	userRouter.PATCH("/me", userController.UpdateProfile)
-	userRouter.PATCH("/me/password", userController.UpdatePassword)
-	userRouter.PATCH("/me/pin", userController.UpdatePin)
-	userRouter.GET("/me/pin/check", userController.CheckPin)
-	userRouter.GET("/me/wallet", userController.GetDashboardInformation)
-	userRouter.GET("/me/transaction-report", userController.GetTransactionReport)
+	{
+		meRouter := userRouter.Group("/me")
+
+		meRouter.GET("/", userController.GetProfile)
+		meRouter.PATCH("/", userController.UpdateProfile)
+		meRouter.PATCH("/password", userController.UpdatePassword)
+		meRouter.PATCH("/pin", userController.UpdatePin)
+		meRouter.GET("/pin/check", userController.CheckPin)
+		meRouter.GET("/wallet", userController.GetDashboardInformation)
+		meRouter.GET("/transaction-report", userController.GetTransactionReport)
+	}
 }

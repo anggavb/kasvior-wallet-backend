@@ -2,17 +2,23 @@ package service
 
 import (
 	"context"
+	"slices"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/dto"
+	"github.com/kasvior-wallet-backend/internal/enum"
+	"github.com/kasvior-wallet-backend/internal/err"
 	"github.com/kasvior-wallet-backend/internal/repository"
 )
 
 type TransactionService struct {
+	db                    *pgxpool.Pool
 	transactionRepository *repository.TransactionRepository
 }
 
-func NewTransactionService(transactionRepository *repository.TransactionRepository) *TransactionService {
+func NewTransactionService(transactionRepository *repository.TransactionRepository, db *pgxpool.Pool) *TransactionService {
 	return &TransactionService{
+		db:                    db,
 		transactionRepository: transactionRepository,
 	}
 }
@@ -20,7 +26,7 @@ func NewTransactionService(transactionRepository *repository.TransactionReposito
 func (ts *TransactionService) FindReceivers(ctx context.Context, userId int, search string, page, limit int) (dto.ReceiverListResponse, error) {
 	offset := (page - 1) * limit
 
-	receivers, err := ts.transactionRepository.FindReceivers(ctx, userId, search, limit, offset)
+	receivers, err := ts.transactionRepository.FindReceivers(ctx, ts.db, userId, search, limit, offset)
 	if err != nil {
 		return dto.ReceiverListResponse{}, err
 	}
@@ -42,4 +48,52 @@ func (ts *TransactionService) FindReceivers(ctx context.Context, userId int, sea
 			Limit: limit,
 		},
 	}, nil
+}
+
+func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentMethodId int) (dto.PaymentMethodResponse, error) {
+	paymentMethod, err := ts.transactionRepository.GetPaymentMethodById(ctx, ts.db, paymentMethodId)
+	if err != nil {
+		return dto.PaymentMethodResponse{}, err
+	}
+
+	return dto.PaymentMethodResponse{
+		Id:     paymentMethod.Id,
+		Name:   paymentMethod.Name,
+		Logo:   paymentMethod.Logo,
+		Method: paymentMethod.Method,
+		Tax:    paymentMethod.Tax,
+	}, nil
+}
+
+func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, typeTransaction string, topup dto.TopupRequest) (string, error) {
+	if !slices.Contains(enum.EnumTypeTransaction, typeTransaction) {
+		return "", err.InvalidPaymentMethodType
+	}
+
+	isSubtotalValid := topup.SubTotal == (int(topup.Amount) - topup.Discount + topup.Tax)
+	if !isSubtotalValid {
+		return "", err.InvalidSubtotal
+	}
+
+	tx, err := ts.db.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	tid, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, typeTransaction, topup.Amount)
+	if err != nil {
+		return "", err
+	}
+
+	paymentMethod, err := ts.transactionRepository.CreateTopupTransactionDetails(ctx, tx, tid, topup)
+	if err != nil {
+		return "", err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return "", err
+	}
+
+	return paymentMethod, err
 }
