@@ -1,10 +1,11 @@
-package helper
+package jwttoken
 
 import (
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/kasvior-wallet-backend/internal/response"
 	"github.com/kasvior-wallet-backend/pkg"
 )
 
@@ -12,14 +13,14 @@ func CheckClaims(ctx *gin.Context) (pkg.Claims, bool) {
 	claimsValue, ok := ctx.Get("claims")
 	if !ok {
 		log.Println("Error: Claims not found in context")
-		JSONUnauthorized(ctx, "Unauthorized, please login!")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return pkg.Claims{}, false
 	}
 
 	claims, ok := claimsValue.(pkg.Claims)
 	if !ok {
 		log.Println("Error: Invalid claims type")
-		JSONUnauthorized(ctx, "Unauthorized, please login!")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return pkg.Claims{}, false
 	}
 
@@ -30,14 +31,14 @@ func CheckAuthToken(ctx *gin.Context) (string, bool) {
 	token, ok := ctx.Get("token")
 	if !ok {
 		log.Println("Error: token not found in context")
-		JSONUnauthorized(ctx, "Unauthorized, please login!")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return "", false
 	}
 
 	tokenString, ok := token.(string)
 	if !ok {
 		log.Println("Error: token type assertion failed")
-		JSONUnauthorized(ctx, "Unauthorized, please login!")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return "", false
 	}
 	return tokenString, true
@@ -55,7 +56,7 @@ func CheckExpiredToken(ctx *gin.Context) (*jwt.NumericDate, error) {
 			log.Println("Error: ", err.Error())
 		}
 		log.Println("Error: expiresAt is nil")
-		JSONUnauthorized(ctx, "Unauthorized, please login!")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return nil, jwt.ErrTokenInvalidClaims
 	}
 

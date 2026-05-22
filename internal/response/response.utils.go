@@ -1,4 +1,4 @@
-package helper
+package response
 
 import (
 	"net/http"
@@ -57,6 +57,7 @@ func JSONCreated(ctx *gin.Context, data any, message string) {
 	})
 }
 
+// Status 204 - No Content
 func JSONNoContent(ctx *gin.Context) {
 	ctx.JSON(http.StatusNoContent, dto.Response{
 		Message: "No Content",

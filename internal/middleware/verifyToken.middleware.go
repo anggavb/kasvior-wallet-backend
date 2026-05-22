@@ -8,14 +8,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/kasvior-wallet-backend/internal/helper"
+	"github.com/kasvior-wallet-backend/internal/jwttoken"
 	"github.com/kasvior-wallet-backend/internal/repository"
+	"github.com/kasvior-wallet-backend/internal/response"
 	"github.com/kasvior-wallet-backend/pkg"
 )
 
 func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 	return func(ctx *gin.Context) { // closure function
-		token, ok := helper.VerifyClientToken(ctx)
+		token, ok := jwttoken.VerifyClientToken(ctx)
 		if !ok {
 			return
 		}
@@ -24,16 +25,16 @@ func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 		if err := claims.VerifyJWT(token); err != nil {
 			log.Println("Error: ", err.Error())
 			if errors.Is(err, jwt.ErrTokenInvalidIssuer) || errors.Is(err, jwt.ErrTokenExpired) {
-				helper.JSONAbortUnauthorized(ctx, err.Error())
+				response.JSONUnauthorized(ctx, err.Error())
 				return
 			}
 
-			helper.JSONAbortUnauthorized(ctx, "Unauthorized, please login!")
+			response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 			return
 		}
 
 		isActive, err := authRepository.IsTokenActive(ctx.Request.Context(), hashToken(token))
-		if !helper.HandleTokenIsActive(ctx, isActive, err) {
+		if !jwttoken.HandleTokenIsActive(ctx, isActive, err) {
 			return
 		}
 
