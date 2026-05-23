@@ -39,6 +39,14 @@ func JSONDuplicate(ctx *gin.Context, message string) {
 	})
 }
 
+// Status 422 - Unprocessable Entity
+func JSONUnprocessableEntity(ctx *gin.Context, errors map[string]string) {
+	ctx.JSON(http.StatusUnprocessableEntity, dto.Response{
+		Message: "Unprocessable Entity",
+		Errors:  errors,
+	})
+}
+
 // Status 200 - OK
 func JSONSuccess(ctx *gin.Context, data any, message string) {
 	ctx.JSON(http.StatusOK, dto.Response{

@@ -1,11 +1,12 @@
 package dto
 
 type TopupRequest struct {
-	Amount          uint `json:"amount" binding:"required,gt=0"`
-	PaymentMethodId int  `json:"payment_method_id" binding:"required"`
-	Discount        int  `json:"discount" binding:"required"`
-	Tax             int  `json:"tax" binding:"required"`
-	SubTotal        int  `json:"sub_total" binding:"required"`
+	Amount          uint   `json:"amount" binding:"required,gt=0"`
+	TypeTransaction string `json:"type" binding:"required,oneof=topup transfer receiver"`
+	PaymentMethodId int    `json:"payment_method_id" binding:"required"`
+	Discount        int    `json:"discount" binding:"required"`
+	Tax             int    `json:"tax" binding:"required"`
+	SubTotal        int    `json:"sub_total" binding:"required"`
 }
 
 type TopupResponse struct {

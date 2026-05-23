@@ -26,7 +26,13 @@ func NewAuthController(authService *service.AuthService) *AuthController {
 
 func (ac *AuthController) Register(ctx *gin.Context) {
 	var body dto.AuthRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
@@ -46,7 +52,13 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 
 func (ac *AuthController) Login(ctx *gin.Context) {
 	var body dto.AuthRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 

@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/dto"
-	"github.com/kasvior-wallet-backend/internal/enum"
-	"github.com/kasvior-wallet-backend/internal/err"
 	"github.com/kasvior-wallet-backend/internal/repository"
 )
 
@@ -65,14 +63,10 @@ func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentM
 	}, nil
 }
 
-func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, typeTransaction string, topup dto.TopupRequest) (string, error) {
-	if !slices.Contains(enum.EnumTypeTransaction, typeTransaction) {
-		return "", err.InvalidPaymentMethodType
-	}
-
+func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, topup dto.TopupRequest) (string, error) {
 	isSubtotalValid := topup.SubTotal == (int(topup.Amount) - topup.Discount + topup.Tax)
 	if !isSubtotalValid {
-		return "", err.InvalidSubtotal
+		return "", apperrors.InvalidSubtotal
 	}
 
 	tx, err := ts.db.Begin(ctx)
@@ -81,7 +75,7 @@ func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, 
 	}
 	defer tx.Rollback(ctx)
 
-	tid, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, typeTransaction, topup.Amount)
+	tid, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, topup.TypeTransaction, topup.Amount)
 	if err != nil {
 		return "", err
 	}

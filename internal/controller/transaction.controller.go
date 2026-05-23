@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/binder"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/jwttoken"
@@ -61,12 +62,22 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	}
 
 	var body dto.TopupRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
-	paymentMethod, err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, "topup", body)
+	paymentMethod, err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, body)
 	if err != nil {
+		if err.Error() == apperrors.InvalidSubtotal.Error() {
+			response.JSONBadRequest(ctx)
+			return
+		}
 		log.Println("Error: ", err.Error())
 		response.JSONInternalServerError(ctx)
 		return

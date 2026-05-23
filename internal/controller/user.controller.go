@@ -46,7 +46,13 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	}
 
 	var body dto.UserUpdateProfileRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
@@ -67,7 +73,13 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 	}
 
 	var body dto.UserUpdatePasswordRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
@@ -92,7 +104,13 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 	}
 
 	var body dto.UserUpdatePinRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
@@ -112,7 +130,13 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 	}
 
 	var body dto.UserCheckPinRequest
-	if !binder.BindFormat(ctx, &body, binding.JSON) {
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
 		return
 	}
 
