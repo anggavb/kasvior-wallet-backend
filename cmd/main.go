@@ -12,6 +12,19 @@ import (
 	"github.com/kasvior-wallet-backend/internal/router"
 )
 
+// @title						Backend Kasvior Wallet API
+// @version						1.0
+// @description					API documentation for Kasvior Wallet backend application
+
+// @license.name				MIT
+
+// @host						localhost:8080
+// @BasePath					/
+
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
+// @description					Bearer token used for authorization
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading env. \ncause: %s", err.Error())
