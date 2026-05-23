@@ -24,6 +24,19 @@ func NewAuthController(authService *service.AuthService) *AuthController {
 	}
 }
 
+// Register godoc
+// @Summary		Register new user
+// @Description	Create a new user account with email and password.
+// @Tags		Auth
+// @Accept		json
+// @Produce		json
+// @Param		request	body		dto.AuthRequest	true	"Register request body"
+// @Success		201		{object}	dto.Response		"Register Successfully"
+// @Failure		400		{object}	dto.Response		"Bad request"
+// @Failure		409		{object}	dto.Response		"Email Already Used"
+// @Failure		422		{object}	dto.Response		"Validation error"
+// @Failure		500		{object}	dto.Response		"Internal server error"
+// @Router			/auth/register [post]
 func (ac *AuthController) Register(ctx *gin.Context) {
 	var body dto.AuthRequest
 	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
@@ -50,6 +63,19 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 	response.JSONCreated(ctx, res, "Register Successfully")
 }
 
+// Login godoc
+// @Summary		Login user
+// @Description	Authenticate a user and return an access token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.AuthRequest	true	"Login request body"
+// @Success		200		{object}	dto.Response		"Login Successfully"
+// @Failure		400		{object}	dto.Response		"Bad request"
+// @Failure		401		{object}	dto.Response		"Invalid email or password"
+// @Failure		422		{object}	dto.Response		"Validation error"
+// @Failure		500		{object}	dto.Response		"Internal server error"
+// @Router			/auth [post]
 func (ac *AuthController) Login(ctx *gin.Context) {
 	var body dto.AuthRequest
 	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
@@ -76,6 +102,17 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "Login Successfully")
 }
 
+// Logout godoc
+// @Summary		Logout user
+// @Description	Invalidate the current bearer token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	dto.Response	"Logout Successfully"
+// @Failure		401	{object}	dto.Response	"Unauthorized"
+// @Failure		500	{object}	dto.Response	"Internal server error"
+// @Router			/auth/logout [post]
 func (ac *AuthController) Logout(ctx *gin.Context) {
 	tokenString, ok := jwttoken.CheckAuthToken(ctx)
 	if !ok {
