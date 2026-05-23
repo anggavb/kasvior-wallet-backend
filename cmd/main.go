@@ -24,7 +24,7 @@ import (
 // @securityDefinitions.apikey	ApiKeyAuth
 // @in							header
 // @name						Authorization
-// @description					Bearer token used for authorization
+// @description					Bearer token used for authorization. Example: Bearer <token>
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading env. \ncause: %s", err.Error())

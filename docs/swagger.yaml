@@ -21,6 +21,40 @@ definitions:
       message:
         type: string
     type: object
+  dto.UserCheckPinRequest:
+    properties:
+      pin:
+        type: string
+    required:
+    - pin
+    type: object
+  dto.UserUpdatePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  dto.UserUpdatePinRequest:
+    properties:
+      pin:
+        type: string
+    required:
+    - pin
+    type: object
+  dto.UserUpdateProfileRequest:
+    properties:
+      fullname:
+        type: string
+      phone_number:
+        type: string
+      photo:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -69,10 +103,15 @@ paths:
       tags:
       - Auth
   /auth/logout:
-    post:
+    delete:
       consumes:
       - application/json
       description: Invalidate the current bearer token.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
       produces:
       - application/json
       responses:
@@ -131,9 +170,290 @@ paths:
       summary: Register new user
       tags:
       - Auth
+  /users/me/:
+    get:
+      description: Get profile information for the authenticated user.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Profile Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user profile
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Update profile information for the authenticated user.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Update profile request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update Profile Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Update current user profile
+      tags:
+      - Users
+  /users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update the authenticated user's password.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Update password request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update Password Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Invalid current password or unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Update current user password
+      tags:
+      - Users
+  /users/me/pin:
+    patch:
+      consumes:
+      - application/json
+      description: Update the authenticated user's 6-digit PIN.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Update PIN request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdatePinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update PIN Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Update current user PIN
+      tags:
+      - Users
+  /users/me/pin/check:
+    get:
+      consumes:
+      - application/json
+      description: Validate the authenticated user's PIN.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Check PIN request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserCheckPinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PIN Valid
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Invalid PIN, PIN not set, or unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Check current user PIN
+      tags:
+      - Users
+  /users/me/transaction-report:
+    get:
+      description: Get the authenticated user's transaction report for the last 7
+        days.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - default: 7d
+        description: Report duration
+        enum:
+        - 7d
+        in: query
+        name: duration
+        type: string
+      - default: all
+        description: Report type
+        enum:
+        - all
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Transaction Report Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user transaction report
+      tags:
+      - Users
+  /users/me/wallet:
+    get:
+      description: Get balance, income, and expense information for the authenticated
+        user.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Dashboard Information Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user wallet dashboard
+      tags:
+      - Users
 securityDefinitions:
   ApiKeyAuth:
-    description: Bearer token used for authorization
+    description: 'Bearer token used for authorization. Example: Bearer <token>'
     in: header
     name: Authorization
     type: apiKey
