@@ -109,10 +109,11 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
+// @Param			X-Swagger	header		string			false	"Set true when using a raw token from Swagger UI"
 // @Success		200	{object}	dto.Response	"Logout Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
-// @Router			/auth/logout [post]
+// @Router			/auth/logout [delete]
 func (ac *AuthController) Logout(ctx *gin.Context) {
 	tokenString, ok := jwttoken.CheckAuthToken(ctx)
 	if !ok {
@@ -134,5 +135,5 @@ func (ac *AuthController) Logout(ctx *gin.Context) {
 		return
 	}
 
-	response.JSONSuccess(ctx, nil, "Logout Successfully")
+	response.JSONNoContent(ctx)
 }
