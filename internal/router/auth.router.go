@@ -18,5 +18,5 @@ func AuthRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	authRouter.POST("", authController.Login)
 	authRouter.POST("/register", authController.Register)
-	authRouter.POST("/logout", middleware.VerifyToken(authRepo), authController.Logout)
+	authRouter.DELETE("/logout", middleware.VerifyToken(authRepo), authController.Logout)
 }
