@@ -16,8 +16,18 @@ func VerifyClientToken(ctx *gin.Context) (string, bool) {
 		return "", false
 	}
 
-	splittedBearer := strings.Split(bearerToken, " ")
-	if len(splittedBearer) != 2 {
+	splittedBearer := strings.Fields(bearerToken)
+	if len(splittedBearer) == 1 {
+		if ctx.GetHeader("X-Swagger") != "" {
+			return splittedBearer[0], true
+		}
+
+		log.Println("Error: Invalid Authorization header format")
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return "", false
+	}
+
+	if len(splittedBearer) != 2 || !strings.EqualFold(splittedBearer[0], "Bearer") {
 		log.Println("Error: Invalid Authorization header format")
 		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return "", false
