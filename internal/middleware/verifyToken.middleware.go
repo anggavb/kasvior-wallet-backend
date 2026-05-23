@@ -18,6 +18,7 @@ func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 	return func(ctx *gin.Context) { // closure function
 		token, ok := jwttoken.VerifyClientToken(ctx)
 		if !ok {
+			response.JSONAbortUnauthorized(ctx)
 			return
 		}
 
@@ -25,16 +26,17 @@ func VerifyToken(authRepository *repository.AuthRepository) gin.HandlerFunc {
 		if err := claims.VerifyJWT(token); err != nil {
 			log.Println("Error: ", err.Error())
 			if errors.Is(err, jwt.ErrTokenInvalidIssuer) || errors.Is(err, jwt.ErrTokenExpired) {
-				response.JSONUnauthorized(ctx, err.Error())
+				response.JSONAbortUnauthorized(ctx)
 				return
 			}
 
-			response.JSONUnauthorized(ctx, "Unauthorized, please login!")
+			response.JSONAbortUnauthorized(ctx)
 			return
 		}
 
 		isActive, err := authRepository.IsTokenActive(ctx.Request.Context(), hashToken(token))
 		if !jwttoken.HandleTokenIsActive(ctx, isActive, err) {
+			response.JSONAbortUnauthorized(ctx)
 			return
 		}
 
