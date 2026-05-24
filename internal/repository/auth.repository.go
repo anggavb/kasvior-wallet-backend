@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/model"
 )
@@ -44,18 +45,122 @@ func (ar *AuthRepository) AddNewUser(ctx context.Context, email, hashedPassword 
 
 func (ar *AuthRepository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
 	sql := `
-		SELECT id, password, is_verified
+		SELECT id, email, password, is_verified
 		FROM users
 		WHERE email = $1;
 	`
 	args := []any{email}
 
 	var user model.User
-	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Password, &user.IsVerified); err != nil {
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Email, &user.Password, &user.IsVerified); err != nil {
 		return model.User{}, err
 	}
 
 	return user, nil
+}
+
+func (ar *AuthRepository) GetPasswordResetUserByEmail(ctx context.Context, email string) (model.User, error) {
+	sql := `
+		SELECT id, email
+		FROM users
+		WHERE email = $1;
+	`
+	args := []any{email}
+
+	var user model.User
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Email); err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func (ar *AuthRepository) SavePasswordResetToken(ctx context.Context, userId int, tokenHash string, expiresAt time.Time) error {
+	sql := `
+		INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+		VALUES ($1, $2, $3);
+	`
+	args := []any{userId, tokenHash, expiresAt}
+
+	_, err := ar.db.Exec(ctx, sql, args...)
+	return err
+}
+
+func (ar *AuthRepository) GetActivePasswordResetToken(ctx context.Context, tokenHash string) (model.PasswordResetToken, error) {
+	sql := `
+		SELECT id, user_id, token_hash, expires_at, used_at, created_at
+		FROM password_reset_tokens
+		WHERE token_hash = $1
+			AND used_at IS NULL
+			AND expires_at > NOW();
+	`
+	args := []any{tokenHash}
+
+	var token model.PasswordResetToken
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(
+		&token.Id,
+		&token.UserId,
+		&token.TokenHash,
+		&token.ExpiresAt,
+		&token.UsedAt,
+		&token.CreatedAt,
+	); err != nil {
+		return model.PasswordResetToken{}, err
+	}
+
+	return token, nil
+}
+
+func (ar *AuthRepository) UpdatePasswordAndUseResetToken(ctx context.Context, resetToken model.PasswordResetToken, hashedPassword string) error {
+	tx, err := ar.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	userSQL := `
+		UPDATE users
+		SET
+			password = $2,
+			updated_at = NOW()
+		WHERE id = $1;
+	`
+	userCmd, err := tx.Exec(ctx, userSQL, resetToken.UserId, hashedPassword)
+	if err != nil {
+		return err
+	}
+	if userCmd.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	tokenSQL := `
+		UPDATE password_reset_tokens
+		SET used_at = NOW()
+		WHERE id = $1
+			AND used_at IS NULL
+			AND expires_at > NOW();
+	`
+	tokenCmd, err := tx.Exec(ctx, tokenSQL, resetToken.Id)
+	if err != nil {
+		return err
+	}
+	if tokenCmd.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	activeTokenSQL := `
+		DELETE FROM active_tokens
+		WHERE user_id = $1;
+	`
+	if _, err := tx.Exec(ctx, activeTokenSQL, resetToken.UserId); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ar *AuthRepository) SaveToken(ctx context.Context, tokenHash string, userId int, expiresAt time.Time) error {

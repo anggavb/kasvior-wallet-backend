@@ -7,16 +7,20 @@ import (
 	"github.com/kasvior-wallet-backend/internal/middleware"
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/internal/service"
+	"github.com/kasvior-wallet-backend/pkg"
 )
 
 func AuthRouter(router *gin.Engine, db *pgxpool.Pool) {
 	authRouter := router.Group("/auth")
 
 	authRepo := repository.NewAuthRepository(db)
-	authService := service.NewAuthService(authRepo)
+	smtpMailer := pkg.NewSMTPMailerFromEnv()
+	authService := service.NewAuthService(authRepo, smtpMailer)
 	authController := controller.NewAuthController(authService)
 
 	authRouter.POST("", authController.Login)
 	authRouter.POST("/register", authController.Register)
+	authRouter.POST("/forgot-password", authController.ForgotPassword)
+	authRouter.POST("/reset-password", authController.ResetPassword)
 	authRouter.DELETE("/logout", middleware.VerifyToken(authRepo), authController.Logout)
 }

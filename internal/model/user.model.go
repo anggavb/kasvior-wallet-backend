@@ -26,3 +26,12 @@ type UserTransactionReport struct {
 	Income  float64
 	Expense float64
 }
+
+type PasswordResetToken struct {
+	Id        int        `db:"id"`
+	UserId    int        `db:"user_id"`
+	TokenHash string     `db:"token_hash"`
+	ExpiresAt time.Time  `db:"expires_at"`
+	UsedAt    *time.Time `db:"used_at"`
+	CreatedAt time.Time  `db:"created_at"`
+}

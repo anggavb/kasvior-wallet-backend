@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/binder"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/jwttoken"
@@ -102,6 +103,77 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "Login Successfully")
 }
 
+// ForgotPassword godoc
+// @Summary		Request password reset
+// @Description	Send password reset instructions when the email is registered.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.ForgotPasswordRequest	true	"Forgot password request body"
+// @Success		200		{object}	dto.Response				"If the email is registered, reset instructions have been sent"
+// @Failure		400		{object}	dto.Response				"Bad request"
+// @Failure		422		{object}	dto.Response				"Validation error"
+// @Failure		500		{object}	dto.Response				"Internal server error"
+// @Router			/auth/forgot-password [post]
+func (ac *AuthController) ForgotPassword(ctx *gin.Context) {
+	var body dto.ForgotPasswordRequest
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
+		return
+	}
+
+	if err := ac.authService.ForgotPassword(ctx.Request.Context(), body); err != nil {
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, nil, "Reset password have been sent")
+}
+
+// ResetPassword godoc
+// @Summary		Reset password
+// @Description	Reset a user password using a valid password reset token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.ResetPasswordRequest	true	"Reset password request body"
+// @Success		200		{object}	dto.Response				"Reset Password Successfully"
+// @Failure		400		{object}	dto.Response				"Bad request"
+// @Failure		401		{object}	dto.Response				"Invalid or expired reset token"
+// @Failure		422		{object}	dto.Response				"Validation error"
+// @Failure		500		{object}	dto.Response				"Internal server error"
+// @Router			/auth/reset-password [post]
+func (ac *AuthController) ResetPassword(ctx *gin.Context) {
+	var body dto.ResetPasswordRequest
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
+		return
+	}
+
+	if err := ac.authService.ResetPassword(ctx.Request.Context(), body); err != nil {
+		log.Println("Error: ", err.Error())
+		if errors.Is(err, apperrors.ErrInvalidPasswordResetToken) {
+			response.JSONUnauthorized(ctx, "Invalid or expired reset token")
+			return
+		}
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, nil, "Reset Password Successfully")
+}
+
 // Logout godoc
 // @Summary		Logout user
 // @Description	Invalidate the current bearer token.
@@ -127,7 +199,7 @@ func (ac *AuthController) Logout(ctx *gin.Context) {
 
 	if err := ac.authService.LogoutUser(ctx.Request.Context(), tokenString, &expiresAt.Time); err != nil {
 		log.Println("Error: ", err.Error())
-		if errors.Is(err, service.ErrTokenAlreadyExpired) {
+		if errors.Is(err, apperrors.ErrTokenAlreadyExpired) {
 			response.JSONUnauthorized(ctx, "Token already expired")
 			return
 		}
