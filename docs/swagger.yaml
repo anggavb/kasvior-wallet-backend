@@ -10,6 +10,24 @@ definitions:
     - email
     - password
     type: object
+  dto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.ResetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
   dto.Response:
     properties:
       data: {}
@@ -128,6 +146,40 @@ paths:
       summary: Login user
       tags:
       - Auth
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send password reset instructions when the email is registered.
+      parameters:
+      - description: Forgot password request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: If the email is registered, reset instructions have been sent
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Request password reset
+      tags:
+      - Auth
   /auth/logout:
     delete:
       consumes:
@@ -194,6 +246,44 @@ paths:
           schema:
             $ref: '#/definitions/dto.Response'
       summary: Register new user
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset a user password using a valid password reset token.
+      parameters:
+      - description: Reset password request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset Password Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Invalid or expired reset token
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Reset password
       tags:
       - Auth
   /transaction/transfer/:
