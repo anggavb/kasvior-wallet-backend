@@ -22,6 +22,8 @@ func FormatValidationError(err error) map[string]string {
 				out[field] = fmt.Sprintf("The %s field is required.", field)
 			case "email":
 				out[field] = fmt.Sprintf("The %s field is not a valid email address.", field)
+			case "gt":
+				out[field] = fmt.Sprintf("The %s field must be greater than %s.", field, param)
 			case "gte":
 				out[field] = fmt.Sprintf("The %s field must be greater than or equal to %s.", field, param)
 			case "lte":
@@ -32,6 +34,8 @@ func FormatValidationError(err error) map[string]string {
 				out[field] = fmt.Sprintf("The %s field must be at most %s characters long.", field, param)
 			case "len":
 				out[field] = fmt.Sprintf("The %s field must be exactly %s characters long.", field, param)
+			case "numeric":
+				out[field] = fmt.Sprintf("The %s field must contain only numeric characters.", field)
 			case "oneof":
 				out[field] = fmt.Sprintf("The %s field must be one of the following: %s.", field, param)
 			default:
