@@ -1,6 +1,13 @@
 basePath: /
 definitions:
-  dto.AuthRequest:
+  dto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.LoginRequest:
     properties:
       email:
         type: string
@@ -10,12 +17,16 @@ definitions:
     - email
     - password
     type: object
-  dto.ForgotPasswordRequest:
+  dto.RegisterRequest:
     properties:
       email:
         type: string
+      password:
+        minLength: 8
+        type: string
     required:
     - email
+    - password
     type: object
   dto.ResetPasswordRequest:
     properties:
@@ -44,12 +55,15 @@ definitions:
       amount:
         type: integer
       discount:
+        minimum: 0
         type: integer
       payment_method_id:
         type: integer
       sub_total:
+        minimum: 0
         type: integer
       tax:
+        minimum: 0
         type: integer
       type:
         enum:
@@ -119,7 +133,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.AuthRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -221,7 +235,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.AuthRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -340,6 +354,7 @@ paths:
         type: string
       - description: Receiver name or phone number search keyword
         in: query
+        maxLength: 100
         name: search
         type: string
       - default: 1
@@ -350,6 +365,8 @@ paths:
       - default: 10
         description: Items per page
         in: query
+        maximum: 100
+        minimum: 1
         name: limit
         type: integer
       produces:
@@ -407,7 +424,8 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Update profile information for the authenticated user.
+      description: Update at least one profile field for the authenticated user. Profile
+        fields are limited to 255 characters.
       parameters:
       - description: Set true when using a raw token from Swagger UI
         in: header
@@ -495,7 +513,7 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Update the authenticated user's 6-digit PIN.
+      description: Update the authenticated user's 6-digit numeric PIN.
       parameters:
       - description: Set true when using a raw token from Swagger UI
         in: header
@@ -539,7 +557,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Validate the authenticated user's PIN.
+      description: Validate the authenticated user's 6-digit numeric PIN.
       parameters:
       - description: Set true when using a raw token from Swagger UI
         in: header

@@ -38,7 +38,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AuthRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -196,7 +196,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AuthRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -384,6 +384,7 @@ const docTemplate = `{
                         "in": "header"
                     },
                     {
+                        "maxLength": 100,
                         "type": "string",
                         "description": "Receiver name or phone number search keyword",
                         "name": "search",
@@ -397,6 +398,8 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
                         "description": "Items per page",
@@ -482,7 +485,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update profile information for the authenticated user.",
+                "description": "Update at least one profile field for the authenticated user. Profile fields are limited to 255 characters.",
                 "consumes": [
                     "application/json"
                 ],
@@ -620,7 +623,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update the authenticated user's 6-digit PIN.",
+                "description": "Update the authenticated user's 6-digit numeric PIN.",
                 "consumes": [
                     "application/json"
                 ],
@@ -689,7 +692,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Validate the authenticated user's PIN.",
+                "description": "Validate the authenticated user's 6-digit numeric PIN.",
                 "consumes": [
                     "application/json"
                 ],
@@ -871,7 +874,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AuthRequest": {
+        "dto.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -886,14 +900,19 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ForgotPasswordRequest": {
+        "dto.RegisterRequest": {
             "type": "object",
             "required": [
-                "email"
+                "email",
+                "password"
             ],
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },
@@ -944,16 +963,19 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "payment_method_id": {
                     "type": "integer"
                 },
                 "sub_total": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "type": {
                     "type": "string",
