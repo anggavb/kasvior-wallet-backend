@@ -25,6 +25,21 @@ func NewTransactionController(transactionService *service.TransactionService) *T
 	}
 }
 
+// FindReceivers godoc
+// @Summary		Find transfer receivers
+// @Description	Get receiver suggestions for the authenticated user.
+// @Tags			Transactions
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			X-Swagger	header		string	false	"Set true when using a raw token from Swagger UI"
+// @Param			search		query		string	false	"Receiver name or phone number search keyword"
+// @Param			page		query		int		false	"Page number"	default(1)
+// @Param			limit		query		int		false	"Items per page"	default(10)
+// @Success		200			{object}	dto.Response	"Get Receivers Successfully"
+// @Failure		400			{object}	dto.Response	"Bad request"
+// @Failure		401			{object}	dto.Response	"Unauthorized"
+// @Failure		500			{object}	dto.Response	"Internal server error"
+// @Router			/transaction/transfer/receivers [get]
 func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 	claims, ok := jwttoken.CheckClaims(ctx)
 	if !ok {
@@ -55,6 +70,21 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "Get Receivers Successfully")
 }
 
+// CreateTopup godoc
+// @Summary		Create topup transaction
+// @Description	Create a topup transaction for the authenticated user.
+// @Tags			Transactions
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			X-Swagger	header		string				false	"Set true when using a raw token from Swagger UI"
+// @Param			request		body		dto.TopupRequest	true	"Topup request body"
+// @Success		201			{object}	dto.Response		"Topup Successfully!"
+// @Failure		400			{object}	dto.Response		"Bad request"
+// @Failure		401			{object}	dto.Response		"Unauthorized"
+// @Failure		422			{object}	dto.Response		"Validation error"
+// @Failure		500			{object}	dto.Response		"Internal server error"
+// @Router			/transaction/transfer/ [post]
 func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	claims, ok := jwttoken.CheckClaims(ctx)
 	if !ok {

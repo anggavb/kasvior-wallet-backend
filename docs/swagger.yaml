@@ -21,6 +21,32 @@ definitions:
       message:
         type: string
     type: object
+  dto.TopupRequest:
+    properties:
+      amount:
+        type: integer
+      discount:
+        type: integer
+      payment_method_id:
+        type: integer
+      sub_total:
+        type: integer
+      tax:
+        type: integer
+      type:
+        enum:
+        - topup
+        - transfer
+        - receiver
+        type: string
+    required:
+    - amount
+    - discount
+    - payment_method_id
+    - sub_total
+    - tax
+    - type
+    type: object
   dto.UserCheckPinRequest:
     properties:
       pin:
@@ -170,6 +196,96 @@ paths:
       summary: Register new user
       tags:
       - Auth
+  /transaction/transfer/:
+    post:
+      consumes:
+      - application/json
+      description: Create a topup transaction for the authenticated user.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Topup request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TopupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Topup Successfully!
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Create topup transaction
+      tags:
+      - Transactions
+  /transaction/transfer/receivers:
+    get:
+      description: Get receiver suggestions for the authenticated user.
+      parameters:
+      - description: Set true when using a raw token from Swagger UI
+        in: header
+        name: X-Swagger
+        type: string
+      - description: Receiver name or phone number search keyword
+        in: query
+        name: search
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Receivers Successfully
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Find transfer receivers
+      tags:
+      - Transactions
   /users/me/:
     get:
       description: Get profile information for the authenticated user.
