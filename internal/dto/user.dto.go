@@ -25,7 +25,7 @@ type UserUpdatePasswordRequest struct {
 }
 
 type UserUpdatePinRequest struct {
-	Pin string `json:"pin" binding:"required,len=6"`
+	Pin string `json:"pin" binding:"required,len=6,numeric"`
 }
 
 type UserDashboardInformationResponse struct {
@@ -41,9 +41,14 @@ type UserTransactionReportResponse struct {
 }
 
 type UserCheckPinRequest struct {
-	Pin string `json:"pin" binding:"required,len=6"`
+	Pin string `json:"pin" binding:"required,len=6,numeric"`
 }
 
 type UserCheckPinResponse struct {
 	IsValid bool `json:"is_valid"`
+}
+
+type TransactionReportQueryRequest struct {
+	Duration string `form:"duration" binding:"omitempty,oneof=7d"`
+	Type     string `form:"type" binding:"omitempty,oneof=all income expense"`
 }

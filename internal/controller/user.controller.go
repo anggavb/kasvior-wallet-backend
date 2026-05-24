@@ -52,7 +52,7 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 
 // UpdateProfile godoc
 // @Summary		Update current user profile
-// @Description	Update profile information for the authenticated user.
+// @Description	Update at least one profile field for the authenticated user. Profile fields are limited to 255 characters.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
@@ -140,7 +140,7 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 
 // UpdatePin godoc
 // @Summary		Update current user PIN
-// @Description	Update the authenticated user's 6-digit PIN.
+// @Description	Update the authenticated user's 6-digit numeric PIN.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
@@ -181,7 +181,7 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 
 // CheckPin godoc
 // @Summary		Check current user PIN
-// @Description	Validate the authenticated user's PIN.
+// @Description	Validate the authenticated user's 6-digit numeric PIN.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
@@ -274,16 +274,15 @@ func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
 // @Failure		500			{object}	dto.Response	"Internal server error"
 // @Router			/users/me/transaction-report [get]
 func (uc *UserController) GetTransactionReport(ctx *gin.Context) {
-	duration := ctx.DefaultQuery("duration", "7d")
-	if duration != "7d" {
+	var query dto.TransactionReportQueryRequest
+	if err := binder.BindFormat(ctx, &query, binding.Query); err != nil {
 		response.JSONBadRequest(ctx)
 		return
 	}
 
-	reportType := ctx.DefaultQuery("type", "all")
-	if reportType != "all" && reportType != "income" && reportType != "expense" {
-		response.JSONBadRequest(ctx)
-		return
+	reportType := query.Type
+	if reportType == "" {
+		reportType = "all"
 	}
 
 	claims, ok := jwttoken.CheckClaims(ctx)
