@@ -31,7 +31,7 @@ func NewAuthController(authService *service.AuthService) *AuthController {
 // @Tags		Auth
 // @Accept		json
 // @Produce		json
-// @Param		request	body		dto.AuthRequest	true	"Register request body"
+// @Param		request	body		dto.RegisterRequest	true	"Register request body"
 // @Success		201		{object}	dto.Response		"Register Successfully"
 // @Failure		400		{object}	dto.Response		"Bad request"
 // @Failure		409		{object}	dto.Response		"Email Already Used"
@@ -39,7 +39,7 @@ func NewAuthController(authService *service.AuthService) *AuthController {
 // @Failure		500		{object}	dto.Response		"Internal server error"
 // @Router			/auth/register [post]
 func (ac *AuthController) Register(ctx *gin.Context) {
-	var body dto.AuthRequest
+	var body dto.RegisterRequest
 	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
 		errorMessages := binder.FormatValidationError(err)
 		if len(errorMessages) > 0 && errorMessages["error"] != "" {
@@ -70,7 +70,7 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			request	body		dto.AuthRequest	true	"Login request body"
+// @Param			request	body		dto.LoginRequest	true	"Login request body"
 // @Success		200		{object}	dto.Response		"Login Successfully"
 // @Failure		400		{object}	dto.Response		"Bad request"
 // @Failure		401		{object}	dto.Response		"Invalid email or password"
@@ -78,7 +78,7 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response		"Internal server error"
 // @Router			/auth [post]
 func (ac *AuthController) Login(ctx *gin.Context) {
-	var body dto.AuthRequest
+	var body dto.LoginRequest
 	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
 		errorMessages := binder.FormatValidationError(err)
 		if len(errorMessages) > 0 && errorMessages["error"] != "" {

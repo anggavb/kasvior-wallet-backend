@@ -36,7 +36,7 @@ func NewAuthService(authRepository *repository.AuthRepository, mailer Mailer) *A
 	}
 }
 
-func (as *AuthService) RegisterUser(ctx context.Context, user dto.AuthRequest) (dto.AuthResponse, error) {
+func (as *AuthService) RegisterUser(ctx context.Context, user dto.RegisterRequest) (dto.AuthResponse, error) {
 	// hashing password
 	var hash pkg.HashConfig
 	hash.UseRecommended()
@@ -54,7 +54,7 @@ func (as *AuthService) RegisterUser(ctx context.Context, user dto.AuthRequest) (
 	}, nil
 }
 
-func (as *AuthService) LoginUser(ctx context.Context, user dto.AuthRequest) (dto.AuthResponse, error) {
+func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dto.AuthResponse, error) {
 	userLogin, err := as.authRepository.GetUserByEmail(ctx, user.Email)
 	if err != nil {
 		return dto.AuthResponse{}, err
