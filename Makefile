@@ -24,3 +24,8 @@ help:
 	@echo "Available commands:"
 	@echo "  build   - Build the application"
 	@echo "  run     - Build and run the application"
+	@echo "  migrate-create NAME=<migration_name> - Create a new migration file"
+	@echo "  migrate-up   - Apply all up migrations"
+	@echo "  migrate-down - Apply all down migrations"
+	@echo "  migrate-force VERSION=<version> - Force set the migration version"
+	@echo "  help    - Show this help message"
