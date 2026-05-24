@@ -64,7 +64,7 @@ func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentM
 }
 
 func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, topup dto.TopupRequest) (string, error) {
-	isSubtotalValid := topup.SubTotal == (int(topup.Amount) - topup.Discount + topup.Tax)
+	isSubtotalValid := *topup.SubTotal == (int(topup.Amount) - *topup.Discount + *topup.Tax)
 	if !isSubtotalValid {
 		return "", apperrors.InvalidSubtotal
 	}

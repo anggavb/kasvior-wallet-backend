@@ -2,7 +2,6 @@ package controller
 
 import (
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -32,9 +31,9 @@ func NewTransactionController(transactionService *service.TransactionService) *T
 // @Produce		json
 // @Security		ApiKeyAuth
 // @Param			X-Swagger	header		string	false	"Set true when using a raw token from Swagger UI"
-// @Param			search		query		string	false	"Receiver name or phone number search keyword"
+// @Param			search		query		string	false	"Receiver name or phone number search keyword"	maxlength(100)
 // @Param			page		query		int		false	"Page number"	default(1)
-// @Param			limit		query		int		false	"Items per page"	default(10)
+// @Param			limit		query		int		false	"Items per page"	minimum(1)	maximum(100)	default(10)
 // @Success		200			{object}	dto.Response	"Get Receivers Successfully"
 // @Failure		400			{object}	dto.Response	"Bad request"
 // @Failure		401			{object}	dto.Response	"Unauthorized"
@@ -46,19 +45,23 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	if err != nil || page < 1 {
+	var query dto.FindReceiversQueryRequest
+	if err := binder.BindFormat(ctx, &query, binding.Query); err != nil {
 		response.JSONBadRequest(ctx)
 		return
 	}
 
-	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
-	if err != nil || limit < 1 {
-		response.JSONBadRequest(ctx)
-		return
+	page := 1
+	if query.Page != nil {
+		page = *query.Page
 	}
 
-	search := strings.TrimSpace(ctx.DefaultQuery("search", ""))
+	limit := 10
+	if query.Limit != nil {
+		limit = *query.Limit
+	}
+
+	search := strings.TrimSpace(query.Search)
 
 	res, err := tc.transactionService.FindReceivers(ctx.Request.Context(), claims.UserId, search, page, limit)
 	if err != nil {
@@ -116,8 +119,8 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	response.JSONCreated(ctx, dto.TopupResponse{
 		Amount:        body.Amount,
 		PaymentMethod: paymentMethod,
-		Discount:      body.Discount,
-		Tax:           body.Tax,
-		SubTotal:      body.SubTotal,
+		Discount:      *body.Discount,
+		Tax:           *body.Tax,
+		SubTotal:      *body.SubTotal,
 	}, "Topup Successfully!")
 }

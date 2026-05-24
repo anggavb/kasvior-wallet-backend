@@ -16,3 +16,9 @@ type ReceiverListResponse struct {
 	Items []ReceiverResponse     `json:"items"`
 	Meta  PaginationMetaResponse `json:"meta"`
 }
+
+type FindReceiversQueryRequest struct {
+	Search string `form:"search" binding:"omitempty,max=100"`
+	Page   *int   `form:"page" binding:"omitempty,gte=1"`
+	Limit  *int   `form:"limit" binding:"omitempty,gte=1,lte=100"`
+}

@@ -104,7 +104,7 @@ func (tr *TransactionRepository) CreateTopupTransactionDetails(ctx context.Conte
 		)
 		SELECT name FROM payment_methods WHERE id = (SELECT payment_method_id FROM topup);
 	`
-	args := []any{transactionId, topup.PaymentMethodId, topup.Discount, topup.Tax, topup.SubTotal}
+	args := []any{transactionId, topup.PaymentMethodId, *topup.Discount, *topup.Tax, *topup.SubTotal}
 
 	var paymentMethod string
 	if err := dbtx.QueryRow(ctx, sql, args...).Scan(&paymentMethod); err != nil {
