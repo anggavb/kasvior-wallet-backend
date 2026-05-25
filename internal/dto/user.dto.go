@@ -49,6 +49,6 @@ type UserCheckPinResponse struct {
 }
 
 type TransactionReportQueryRequest struct {
-	Duration string `form:"duration" binding:"omitempty,oneof=7d"`
-	Type     string `form:"type" binding:"omitempty,oneof=all income expense"`
+	Duration string `form:"duration" binding:"oneof=7d"`
+	Type     string `form:"type" binding:"oneof=all income expense"`
 }

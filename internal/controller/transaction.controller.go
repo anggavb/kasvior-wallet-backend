@@ -117,9 +117,6 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		return
 	}
 
-	// gausah parsing ini, biar frontend aja
-	// kirim subtotal aja
-	// (pembaayaran sekian berhasil, subtotal)
 	response.JSONCreated(ctx, dto.TopupResponse{
 		Amount:        body.Amount,
 		PaymentMethod: paymentMethod,
@@ -128,5 +125,3 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		SubTotal:      *body.SubTotal,
 	}, "Topup Successfully!")
 }
-
-// invalidation cache
