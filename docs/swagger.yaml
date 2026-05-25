@@ -300,7 +300,7 @@ paths:
       summary: Reset password
       tags:
       - Auth
-  /transaction/transfer/:
+  /transaction/topup:
     post:
       consumes:
       - application/json

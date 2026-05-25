@@ -292,7 +292,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/transaction/transfer/": {
+        "/transaction/topup": {
             "post": {
                 "security": [
                     {

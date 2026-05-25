@@ -87,7 +87,7 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 // @Failure		401			{object}	dto.Response		"Unauthorized"
 // @Failure		422			{object}	dto.Response		"Validation error"
 // @Failure		500			{object}	dto.Response		"Internal server error"
-// @Router			/transaction/transfer/ [post]
+// @Router			/transaction/topup [post]
 func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	claims, ok := jwttoken.CheckClaims(ctx)
 	if !ok {

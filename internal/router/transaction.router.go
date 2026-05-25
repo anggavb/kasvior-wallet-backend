@@ -18,9 +18,11 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool) {
 	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authRepo))
 
 	{ // use for scoping route
-		transferRouter := transactionRouter.Group("/transfer")
+		transactionRouter.POST("/topup", transactionController.CreateTopup)
+	}
 
-		transferRouter.POST("/", transactionController.CreateTopup)
+	{ // use for scoping route
+		transferRouter := transactionRouter.Group("/transfer")
 		transferRouter.GET("/receivers", transactionController.FindReceivers)
 	}
 }
