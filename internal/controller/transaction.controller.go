@@ -40,7 +40,7 @@ func NewTransactionController(transactionService *service.TransactionService) *T
 // @Failure		500			{object}	dto.Response	"Internal server error"
 // @Router			/transaction/transfer/receivers [get]
 func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -89,7 +89,7 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 // @Failure		500			{object}	dto.Response		"Internal server error"
 // @Router			/transaction/topup [post]
 func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -108,6 +108,7 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	paymentMethod, err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, body)
 	if err != nil {
 		if err.Error() == apperrors.InvalidSubtotal.Error() {
+			log.Println("Error: ", err.Error())
 			response.JSONBadRequest(ctx)
 			return
 		}
@@ -116,6 +117,9 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		return
 	}
 
+	// gausah parsing ini, biar frontend aja
+	// kirim subtotal aja
+	// (pembaayaran sekian berhasil, subtotal)
 	response.JSONCreated(ctx, dto.TopupResponse{
 		Amount:        body.Amount,
 		PaymentMethod: paymentMethod,
@@ -124,3 +128,5 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		SubTotal:      *body.SubTotal,
 	}, "Topup Successfully!")
 }
+
+// invalidation cache

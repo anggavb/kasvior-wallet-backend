@@ -9,7 +9,7 @@ import (
 	"github.com/kasvior-wallet-backend/pkg"
 )
 
-func CheckClaims(ctx *gin.Context) (pkg.Claims, bool) {
+func GetClaims(ctx *gin.Context) (pkg.Claims, bool) {
 	claimsValue, ok := ctx.Get("claims")
 	if !ok {
 		log.Println("Error: Claims not found in context")
@@ -45,7 +45,7 @@ func CheckAuthToken(ctx *gin.Context) (string, bool) {
 }
 
 func CheckExpiredToken(ctx *gin.Context) (*jwt.NumericDate, error) {
-	claims, ok := CheckClaims(ctx)
+	claims, ok := GetClaims(ctx)
 	if !ok {
 		return nil, jwt.ErrTokenInvalidClaims
 	}

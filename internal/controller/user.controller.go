@@ -35,7 +35,7 @@ func NewUserController(userService *service.UserService) *UserController {
 // @Failure		500	{object}	dto.Response	"Internal server error"
 // @Router			/users/me/ [get]
 func (uc *UserController) GetProfile(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -66,7 +66,7 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response					"Internal server error"
 // @Router			/users/me/ [patch]
 func (uc *UserController) UpdateProfile(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -108,7 +108,7 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response						"Internal server error"
 // @Router			/users/me/password [patch]
 func (uc *UserController) UpdatePassword(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -154,7 +154,7 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response				"Internal server error"
 // @Router			/users/me/pin [patch]
 func (uc *UserController) UpdatePin(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -195,7 +195,7 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response				"Internal server error"
 // @Router			/users/me/pin/check [get]
 func (uc *UserController) CheckPin(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -244,7 +244,7 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 // @Failure		500	{object}	dto.Response	"Internal server error"
 // @Router			/users/me/wallet [get]
 func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
@@ -285,7 +285,7 @@ func (uc *UserController) GetTransactionReport(ctx *gin.Context) {
 		reportType = "all"
 	}
 
-	claims, ok := jwttoken.CheckClaims(ctx)
+	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
