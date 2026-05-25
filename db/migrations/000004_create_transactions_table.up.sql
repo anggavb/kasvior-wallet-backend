@@ -1,3 +1,15 @@
+CREATE TYPE "type_transaction" AS ENUM (
+  'topup',
+  'transfer',
+  'receiver'
+);
+
+CREATE TYPE "status_transaction" AS ENUM (
+  'pending',
+  'success',
+  'failed'
+);
+
 CREATE TABLE "transactions" (
   "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "user_id" int NOT NULL,

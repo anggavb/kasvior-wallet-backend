@@ -1,3 +1,8 @@
+CREATE TYPE "method_type" AS ENUM (
+  'online',
+  'bank'
+);
+
 CREATE TABLE "payment_methods" (
   "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "name" VARCHAR(255) NOT NULL,

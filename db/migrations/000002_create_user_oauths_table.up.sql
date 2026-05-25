@@ -1,3 +1,8 @@
+CREATE TYPE "provider_name" AS ENUM (
+  'google',
+  'facebook'
+);
+
 CREATE TABLE "user_oauths" (
   "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "user_id" int NOT NULL,
