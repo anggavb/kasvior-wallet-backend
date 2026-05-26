@@ -23,19 +23,20 @@ migrate-force:
 	@migrate -database $(DB_URL) -path $(MIGRATION_PATH) force $(VERSION)
 
 seeder-create:
-	@migrate create -ext sql -dir $(SEEDER_PATH) -seq $(NAME)_seeder
+	@touch $(SEEDER_PATH)/$(NAME)_seeder.sql
 
-seeder-up:
-	@migrate -database "$(DB_URL)&x-migrations-table=$(SEED_TABLE)" -path $(SEEDER_PATH) up
-
-seeder-down:
-	@migrate -database "$(DB_URL)&x-migrations-table=$(SEED_TABLE)" -path $(SEEDER_PATH) down
+seed:
+	@echo "Start seeding..."
+	@for f in ${SEEDER_PATH}/*.sql; do \
+		echo "Applying seeder: $$f"; \
+		psql $(DB_URL) -f "$$f"; \
+	done
+	@echo "Seeding completed."
 
 fresh:
 	@make migrate-down
 	@make migrate-up
-	@make seeder-down
-	@make seeder-up
+	@make seed
 
 help:
 	@echo "Available commands:"
@@ -47,6 +48,5 @@ help:
 	@echo "  migrate-down                           - Apply all down migrations"
 	@echo "  migrate-force VERSION=<version>        - Force set the migration version"
 	@echo "  seeder-create NAME=<seeder_name>       - Create a new seeder file"
-	@echo "  seeder-up                              - Apply all up seeders"
-	@echo "  seeder-down                            - Apply all down seeders"
+	@echo "  seed                                   - Apply all seeders"
 	@echo "  help                                   - Show this help message"
