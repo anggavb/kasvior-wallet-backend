@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/binder"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/jwttoken"
@@ -125,7 +126,7 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 	}
 
 	if err := uc.userService.UpdatePassword(ctx.Request.Context(), claims.UserId, body); err != nil {
-		if errors.Is(err, service.ErrInvalidPassword) {
+		if errors.Is(err, apperrors.ErrInvalidPassword) {
 			response.JSONUnauthorized(ctx, "Invalid current password")
 			return
 		}
@@ -213,12 +214,12 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 
 	res, err := uc.userService.CheckPin(ctx.Request.Context(), claims.UserId, body.Pin)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidPin) {
+		if errors.Is(err, apperrors.ErrInvalidPin) {
 			log.Println("Invalid PIN: ", err.Error())
 			response.JSONUnauthorized(ctx, "Invalid PIN")
 			return
 		}
-		if errors.Is(err, service.ErrPinNotSet) {
+		if errors.Is(err, apperrors.ErrPinNotSet) {
 			log.Println("PIN not set: ", err.Error())
 			response.JSONUnauthorized(ctx, "PIN not set")
 			return

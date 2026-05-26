@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/pkg"
@@ -14,12 +14,6 @@ import (
 type UserService struct {
 	userRepository *repository.UserRepository
 }
-
-var (
-	ErrPinNotSet       = errors.New("pin not set")
-	ErrInvalidPin      = errors.New("invalid pin")
-	ErrInvalidPassword = errors.New("invalid password")
-)
 
 func NewUserService(userRepository *repository.UserRepository) *UserService {
 	return &UserService{
@@ -62,7 +56,7 @@ func (us *UserService) UpdatePassword(ctx context.Context, userId int, req dto.U
 
 	var hash pkg.HashConfig
 	if err := hash.Compare(req.CurrentPassword, user.Password); err != nil {
-		return ErrInvalidPassword
+		return apperrors.ErrInvalidPassword
 	}
 
 	hash.UseRecommended()
@@ -81,12 +75,12 @@ func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dt
 		return dto.UserCheckPinResponse{}, err
 	}
 	if user.Pin == nil {
-		return dto.UserCheckPinResponse{}, ErrPinNotSet
+		return dto.UserCheckPinResponse{}, apperrors.ErrPinNotSet
 	}
 
 	storedPin := strings.TrimSpace(*user.Pin)
 	if pin != storedPin {
-		return dto.UserCheckPinResponse{}, ErrInvalidPin
+		return dto.UserCheckPinResponse{}, apperrors.ErrInvalidPin
 	}
 
 	return dto.UserCheckPinResponse{IsValid: true}, nil
