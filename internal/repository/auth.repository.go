@@ -45,14 +45,14 @@ func (ar *AuthRepository) AddNewUser(ctx context.Context, email, hashedPassword 
 
 func (ar *AuthRepository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
 	sql := `
-		SELECT id, email, password, is_verified
+		SELECT id, email, password, is_verified, pin
 		FROM users
 		WHERE email = $1;
 	`
 	args := []any{email}
 
 	var user model.User
-	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Email, &user.Password, &user.IsVerified); err != nil {
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Email, &user.Password, &user.IsVerified, &user.Pin); err != nil {
 		return model.User{}, err
 	}
 

@@ -50,7 +50,7 @@ func (as *AuthService) RegisterUser(ctx context.Context, user dto.RegisterReques
 	return dto.AuthResponse{
 		Id:        newUser.Id,
 		Email:     newUser.Email,
-		CreatedAt: newUser.CreatedAt,
+		CreatedAt: &newUser.CreatedAt,
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dt
 		return dto.AuthResponse{}, err
 	}
 
-	claims := pkg.NewClaims(userLogin.Id, user.Email, userLogin.IsVerified)
+	claims := pkg.NewClaims(userLogin.Id, user.Email, userLogin.IsVerified, userLogin.Pin != nil)
 	token, err := claims.GenerateJWT()
 	if err != nil {
 		return dto.AuthResponse{}, err
@@ -75,9 +75,10 @@ func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dt
 		return dto.AuthResponse{}, err
 	}
 
+	hasPin := userLogin.Pin != nil
 	return dto.AuthResponse{
-		Email: user.Email,
-		Token: token,
+		Token:  token,
+		HasPin: &hasPin,
 	}, nil
 }
 

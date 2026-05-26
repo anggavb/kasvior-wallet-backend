@@ -12,14 +12,16 @@ type Claims struct {
 	UserId     int
 	Email      string
 	IsVerified bool
+	HasPin     bool
 	jwt.RegisteredClaims
 }
 
-func NewClaims(id int, email string, isVerified bool) *Claims {
+func NewClaims(id int, email string, isVerified bool, hasPin bool) *Claims {
 	return &Claims{
 		UserId:     id,
 		Email:      email,
 		IsVerified: isVerified,
+		HasPin:     hasPin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    os.Getenv("JWT_ISSUER"),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Hour)),
