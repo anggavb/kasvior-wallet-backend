@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -66,21 +68,32 @@ func (ur *UserRepository) GetPasswordById(ctx context.Context, userId int) (mode
 	return user, nil
 }
 
-func (ur *UserRepository) UpdateProfileById(ctx context.Context, userId int, fullname, phoneNumber, photo *string) (model.User, error) {
-	sqlQuery := `
-		UPDATE users
-		SET
-			fullname = COALESCE($2, fullname),
-			phone_number = COALESCE($3, phone_number),
-			photo = COALESCE($4, photo),
-			updated_at = NOW()
-		WHERE id = $1
-		RETURNING fullname, email, phone_number, photo;
-	`
-	args := []any{userId, fullname, phoneNumber, photo}
+func (ur *UserRepository) UpdateProfileById(ctx context.Context, userId int, fullname, phoneNumber *string, photo string) (model.User, error) {
+	var sql strings.Builder
+	args := []any{userId}
+	counter := 2
+
+	sql.WriteString("UPDATE users SET")
+	if fullname != nil {
+		fmt.Fprintf(&sql, " fullname = $%d,", counter)
+		args = append(args, fullname)
+		counter++
+	}
+	if phoneNumber != nil {
+		fmt.Fprintf(&sql, " phone_number = $%d,", counter)
+		args = append(args, phoneNumber)
+		counter++
+	}
+	if photo != "" {
+		fmt.Fprintf(&sql, " photo = $%d,", counter)
+		args = append(args, photo)
+		counter++
+	}
+	sql.WriteString(" updated_at = NOW()")
+	sql.WriteString(" WHERE id = $1 RETURNING fullname, email, phone_number, photo;")
 
 	var user model.User
-	if err := ur.db.QueryRow(ctx, sqlQuery, args...).Scan(&user.Fullname, &user.Email, &user.PhoneNumber, &user.Photo); err != nil {
+	if err := ur.db.QueryRow(ctx, sql.String(), args...).Scan(&user.Fullname, &user.Email, &user.PhoneNumber, &user.Photo); err != nil {
 		return model.User{}, err
 	}
 

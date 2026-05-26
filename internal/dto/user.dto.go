@@ -1,5 +1,7 @@
 package dto
 
+import "mime/multipart"
+
 type UserProfileResponse struct {
 	Fullname *string `json:"fullname"`
 	Email    string  `json:"email"`
@@ -7,9 +9,9 @@ type UserProfileResponse struct {
 }
 
 type UserUpdateProfileRequest struct {
-	Fullname    *string `json:"fullname"`
-	PhoneNumber *string `json:"phone_number"`
-	Photo       *string `json:"photo"`
+	Fullname    *string               `form:"fullname" binding:"omitnil,min=3"`
+	PhoneNumber *string               `form:"phone_number" binding:"omitnil,min=10,max=15"`
+	Photo       *multipart.FileHeader `form:"photo" binding:"omitnil,image_max_size=2097152,image_type"` // 2MB
 }
 
 type UserUpdateProfileResponse struct {

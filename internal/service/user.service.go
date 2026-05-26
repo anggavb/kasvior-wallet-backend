@@ -34,8 +34,8 @@ func (us *UserService) GetProfile(ctx context.Context, userId int) (dto.UserProf
 	}, nil
 }
 
-func (us *UserService) UpdateProfile(ctx context.Context, userId int, req dto.UserUpdateProfileRequest) (dto.UserUpdateProfileResponse, error) {
-	user, err := us.userRepository.UpdateProfileById(ctx, userId, req.Fullname, req.PhoneNumber, req.Photo)
+func (us *UserService) UpdateProfile(ctx context.Context, userId int, fullname, phoneNumber *string, photo string) (dto.UserUpdateProfileResponse, error) {
+	user, err := us.userRepository.UpdateProfileById(ctx, userId, fullname, phoneNumber, photo)
 	if err != nil {
 		return dto.UserUpdateProfileResponse{}, err
 	}

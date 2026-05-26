@@ -104,15 +104,6 @@ definitions:
     required:
     - pin
     type: object
-  dto.UserUpdateProfileRequest:
-    properties:
-      fullname:
-        type: string
-      phone_number:
-        type: string
-      photo:
-        type: string
-    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -405,16 +396,24 @@ paths:
       - Users
     patch:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Update at least one profile field for the authenticated user. Profile
         fields are limited to 255 characters.
       parameters:
-      - description: Update profile request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserUpdateProfileRequest'
+      - description: Full name of the user
+        in: formData
+        maxLength: 255
+        name: fullname
+        type: string
+      - description: Phone number of the user
+        in: formData
+        maxLength: 255
+        name: phone_number
+        type: string
+      - description: Profile photo of the user
+        in: formData
+        name: photo
+        type: file
       produces:
       - application/json
       responses:

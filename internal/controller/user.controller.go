@@ -2,7 +2,11 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"path"
+	"path/filepath"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -54,10 +58,12 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 // @Summary		Update current user profile
 // @Description	Update at least one profile field for the authenticated user. Profile fields are limited to 255 characters.
 // @Tags			Users
-// @Accept			json
-// @Produce		json
+// @Accept			mpfd
+// @Produce			json
 // @Security		ApiKeyAuth
-// @Param			request	body		dto.UserUpdateProfileRequest	true	"Update profile request body"
+// @Param			fullname		formData	string	false	"Full name of the user"	maxlength(255)
+// @Param			phone_number	formData	string	false	"Phone number of the user"	maxlength(255)
+// @Param			photo			formData	file	false	"Profile photo of the user"
 // @Success		200		{object}	dto.Response					"Update Profile Successfully"
 // @Failure		400		{object}	dto.Response					"Bad request"
 // @Failure		401		{object}	dto.Response					"Unauthorized"
@@ -67,11 +73,17 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
+		response.JSONUnauthorized(ctx, "Unauthorized")
 		return
 	}
 
 	var body dto.UserUpdateProfileRequest
-	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+	if err := binder.BindFormat(ctx, &body, binding.FormMultipart); err != nil {
+		if body.Fullname == nil && body.PhoneNumber == nil && body.Photo == nil {
+			response.JSONBadRequestWithMessage(ctx, "At least one field (fullname, phone_number, or photo) must be provided for update")
+			return
+		}
+
 		errorMessages := binder.FormatValidationError(err)
 		if len(errorMessages) > 0 && errorMessages["error"] != "" {
 			response.JSONBadRequest(ctx)
@@ -81,7 +93,21 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	res, err := uc.userService.UpdateProfile(ctx.Request.Context(), claims.UserId, body)
+	var urlPath string
+	if body.Photo != nil {
+		ext := path.Ext(body.Photo.Filename)
+		filename := fmt.Sprintf("profile_%d%s", time.Now().UnixNano(), ext)
+		dst := filepath.Join("public", "img", filename)
+		urlPath = fmt.Sprintf("/image/%s", filename)
+
+		if err := ctx.SaveUploadedFile(body.Photo, dst); err != nil {
+			log.Println("Error saving file: ", err.Error())
+			response.JSONInternalServerError(ctx)
+			return
+		}
+	}
+
+	res, err := uc.userService.UpdateProfile(ctx.Request.Context(), claims.UserId, body.Fullname, body.PhoneNumber, urlPath)
 	if err != nil {
 		log.Println("Error: ", err.Error())
 		response.JSONInternalServerError(ctx)

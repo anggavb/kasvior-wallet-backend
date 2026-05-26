@@ -23,6 +23,13 @@ func JSONBadRequest(ctx *gin.Context) {
 	})
 }
 
+func JSONBadRequestWithMessage(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusBadRequest, dto.Response{
+		Message: message,
+		Error:   "Bad Request",
+	})
+}
+
 // Status 401 - Unauthorized
 func JSONUnauthorized(ctx *gin.Context, message string) {
 	ctx.JSON(http.StatusUnauthorized, dto.Response{

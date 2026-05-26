@@ -459,7 +459,7 @@ const docTemplate = `{
                 ],
                 "description": "Update at least one profile field for the authenticated user. Profile fields are limited to 255 characters.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -470,13 +470,24 @@ const docTemplate = `{
                 "summary": "Update current user profile",
                 "parameters": [
                     {
-                        "description": "Update profile request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserUpdateProfileRequest"
-                        }
+                        "maxLength": 255,
+                        "type": "string",
+                        "description": "Full name of the user",
+                        "name": "fullname",
+                        "in": "formData"
+                    },
+                    {
+                        "maxLength": 255,
+                        "type": "string",
+                        "description": "Phone number of the user",
+                        "name": "phone_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile photo of the user",
+                        "name": "photo",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -955,20 +966,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "pin": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserUpdateProfileRequest": {
-            "type": "object",
-            "properties": {
-                "fullname": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "photo": {
                     "type": "string"
                 }
             }
