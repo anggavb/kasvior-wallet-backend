@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -38,6 +39,15 @@ func FormatValidationError(err error) map[string]string {
 				out[field] = fmt.Sprintf("The %s field must contain only numeric characters.", field)
 			case "oneof":
 				out[field] = fmt.Sprintf("The %s field must be one of the following: %s.", field, param)
+			case "image_max_size":
+				paramValue, err := strconv.ParseInt(param, 10, 64)
+				if err != nil {
+					out[field] = fmt.Sprintf("The %s field has an invalid size parameter.", field)
+					continue
+				}
+				out[field] = fmt.Sprintf("The %s field must not exceed %d MB in size.", field, int(paramValue/(1024*1024)))
+			case "image_type":
+				out[field] = fmt.Sprintf("The %s field must be a valid image file (JPEG, PNG, BMP, or HEIC).", field)
 			default:
 				out[field] = fmt.Sprintf("The %s field does not meet the validation requirements for %s %s.", field, tag, param)
 			}

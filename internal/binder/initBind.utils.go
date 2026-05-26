@@ -4,6 +4,7 @@ import (
 	"log"
 	"mime/multipart"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin/binding"
@@ -51,14 +52,34 @@ func initValidate() {
 		log.Println("RegisterValidation - Add custom validation for 'numeric' tag")
 
 		// Register Custom Validator for image_check tag
-		v.RegisterValidation("image_check", func(fl validator.FieldLevel) bool {
-			file, ok := fl.Field().Interface().(*multipart.FileHeader)
+		v.RegisterValidation("image_max_size", func(fl validator.FieldLevel) bool {
+			file, ok := fl.Field().Interface().(multipart.FileHeader)
 			if !ok {
+				log.Println("Invalid type for image_check validation")
 				return false
 			}
 
 			// Example: Max size 2MB
-			if file.Size > 2*1024*1024 {
+			param := fl.Param()
+			log.Println(param)
+			maxSize, err := strconv.ParseInt(param, 10, 64)
+			if err != nil {
+				return false // Gagalkan validasi jika parameter tag bukan angka konkrit
+			}
+
+			if file.Size > maxSize {
+				log.Println("Max size more than allowed")
+				return false
+			}
+
+			return true
+		})
+		log.Println("RegisterValidation - Add custom validation for 'image_max_size' tag")
+
+		v.RegisterValidation("image_type", func(fl validator.FieldLevel) bool {
+			file, ok := fl.Field().Interface().(multipart.FileHeader)
+			if !ok {
+				log.Println("Invalid type for image_type validation")
 				return false
 			}
 
@@ -72,7 +93,6 @@ func initValidate() {
 
 			return allowedTypes[file.Header.Get("Content-Type")]
 		})
-		log.Println("RegisterValidation - Add custom validation for 'image_check' tag")
+		log.Println("RegisterValidation - Add custom validation for 'image_type' tag")
 	}
-
 }
