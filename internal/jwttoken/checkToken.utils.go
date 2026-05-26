@@ -13,14 +13,12 @@ func GetClaims(ctx *gin.Context) (pkg.Claims, bool) {
 	claimsValue, ok := ctx.Get("claims")
 	if !ok {
 		log.Println("Error: Claims not found in context")
-		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return pkg.Claims{}, false
 	}
 
 	claims, ok := claimsValue.(pkg.Claims)
 	if !ok {
 		log.Println("Error: Invalid claims type")
-		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
 		return pkg.Claims{}, false
 	}
 
