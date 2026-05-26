@@ -1,7 +1,8 @@
 notes
 tmp
-public/docs*[.docs, .docx, .txt]
-public/img*[.jpg, .jpeg, .png]
+public/docs/*
+public/img/*
+!public/**/README.md
 
 .env
 .air.toml
