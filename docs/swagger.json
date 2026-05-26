@@ -820,7 +820,8 @@
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "anggavb8@gmail.com"
                 }
             }
         },
@@ -832,10 +833,12 @@
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "anggavb8@gmail.com"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "secreto123"
                 }
             }
         },
@@ -847,11 +850,13 @@
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "anggavb8@gmail.com"
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "example": "secreto123"
                 }
             }
         },
@@ -864,7 +869,8 @@
             "properties": {
                 "new_password": {
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "example": "secreto123"
                 },
                 "token": {
                     "type": "string"

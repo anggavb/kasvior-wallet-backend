@@ -3,6 +3,7 @@ definitions:
   dto.ForgotPasswordRequest:
     properties:
       email:
+        example: anggavb8@gmail.com
         type: string
     required:
     - email
@@ -10,8 +11,10 @@ definitions:
   dto.LoginRequest:
     properties:
       email:
+        example: anggavb8@gmail.com
         type: string
       password:
+        example: secreto123
         type: string
     required:
     - email
@@ -20,8 +23,10 @@ definitions:
   dto.RegisterRequest:
     properties:
       email:
+        example: anggavb8@gmail.com
         type: string
       password:
+        example: secreto123
         minLength: 8
         type: string
     required:
@@ -31,6 +36,7 @@ definitions:
   dto.ResetPasswordRequest:
     properties:
       new_password:
+        example: secreto123
         minLength: 8
         type: string
       token:
