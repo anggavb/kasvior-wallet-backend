@@ -31,12 +31,12 @@ func (ar *AuthRepository) AddNewUser(ctx context.Context, email, hashedPassword 
 			INSERT INTO wallets (user_id)
 			SELECT id FROM register
 		)
-		SELECT id, email, created_at FROM register;
+		SELECT email, created_at FROM register;
 	`
 	args := []any{email, hashedPassword}
 
 	var user model.User
-	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Email, &user.CreatedAt); err != nil {
+	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&user.Email, &user.CreatedAt); err != nil {
 		return model.User{}, err
 	}
 

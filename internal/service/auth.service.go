@@ -48,7 +48,6 @@ func (as *AuthService) RegisterUser(ctx context.Context, user dto.RegisterReques
 	}
 
 	return dto.AuthResponse{
-		Id:        newUser.Id,
 		Email:     newUser.Email,
 		CreatedAt: &newUser.CreatedAt,
 	}, nil
