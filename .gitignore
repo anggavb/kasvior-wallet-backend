@@ -1,5 +1,7 @@
 notes
 tmp
+public/docs*[.docs, .docx, .txt]
+public/img*[.jpg, .jpeg, .png]
 
 .env
 .air.toml
