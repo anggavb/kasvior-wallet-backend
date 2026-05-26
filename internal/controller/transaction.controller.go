@@ -30,7 +30,6 @@ func NewTransactionController(transactionService *service.TransactionService) *T
 // @Tags			Transactions
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string	false	"Set true when using a raw token from Swagger UI"
 // @Param			search		query		string	false	"Receiver name or phone number search keyword"	maxlength(100)
 // @Param			page		query		int		false	"Page number"	default(1)
 // @Param			limit		query		int		false	"Items per page"	minimum(1)	maximum(100)	default(10)
@@ -80,7 +79,6 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string				false	"Set true when using a raw token from Swagger UI"
 // @Param			request		body		dto.TopupRequest	true	"Topup request body"
 // @Success		201			{object}	dto.Response		"Topup Successfully!"
 // @Failure		400			{object}	dto.Response		"Bad request"

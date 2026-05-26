@@ -181,7 +181,6 @@ func (ac *AuthController) ResetPassword(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string			false	"Set true when using a raw token from Swagger UI"
 // @Success		200	{object}	dto.Response	"Logout Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"

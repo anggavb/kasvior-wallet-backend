@@ -30,7 +30,6 @@ func NewUserController(userService *service.UserService) *UserController {
 // @Tags			Users
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string			false	"Set true when using a raw token from Swagger UI"
 // @Success		200	{object}	dto.Response	"Get Profile Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
@@ -58,7 +57,6 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string							false	"Set true when using a raw token from Swagger UI"
 // @Param			request	body		dto.UserUpdateProfileRequest	true	"Update profile request body"
 // @Success		200		{object}	dto.Response					"Update Profile Successfully"
 // @Failure		400		{object}	dto.Response					"Bad request"
@@ -100,7 +98,6 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string								false	"Set true when using a raw token from Swagger UI"
 // @Param			request	body		dto.UserUpdatePasswordRequest	true	"Update password request body"
 // @Success		200		{object}	dto.Response						"Update Password Successfully"
 // @Failure		400		{object}	dto.Response						"Bad request"
@@ -146,7 +143,6 @@ func (uc *UserController) UpdatePassword(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string						false	"Set true when using a raw token from Swagger UI"
 // @Param			request	body		dto.UserUpdatePinRequest	true	"Update PIN request body"
 // @Success		200		{object}	dto.Response				"Update PIN Successfully"
 // @Failure		400		{object}	dto.Response				"Bad request"
@@ -187,7 +183,6 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string						false	"Set true when using a raw token from Swagger UI"
 // @Param			request	body		dto.UserCheckPinRequest	true	"Check PIN request body"
 // @Success		200		{object}	dto.Response				"PIN Valid"
 // @Failure		400		{object}	dto.Response				"Bad request"
@@ -239,7 +234,6 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 // @Tags			Users
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string			false	"Set true when using a raw token from Swagger UI"
 // @Success		200	{object}	dto.Response	"Get Dashboard Information Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
@@ -266,7 +260,6 @@ func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
 // @Tags			Users
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			X-Swagger	header		string			false	"Set true when using a raw token from Swagger UI"
 // @Param			duration	query		string			false	"Report duration"	Enums(7d)					default(7d)
 // @Param			type		query		string			false	"Report type"		Enums(all, income, expense)	default(all)
 // @Success		200			{object}	dto.Response	"Get Transaction Report Successfully"

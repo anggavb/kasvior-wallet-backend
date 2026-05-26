@@ -146,14 +146,6 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Logout user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Logout Successfully",
@@ -312,12 +304,6 @@ const docTemplate = `{
                 "summary": "Create topup transaction",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
-                    {
                         "description": "Topup request body",
                         "name": "request",
                         "in": "body",
@@ -377,12 +363,6 @@ const docTemplate = `{
                 ],
                 "summary": "Find transfer receivers",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
                     {
                         "maxLength": 100,
                         "type": "string",
@@ -450,14 +430,6 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "Get current user profile",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Get Profile Successfully",
@@ -497,12 +469,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update current user profile",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
                     {
                         "description": "Update profile request body",
                         "name": "request",
@@ -567,12 +533,6 @@ const docTemplate = `{
                 "summary": "Update current user password",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
-                    {
                         "description": "Update password request body",
                         "name": "request",
                         "in": "body",
@@ -635,12 +595,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update current user PIN",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
                     {
                         "description": "Update PIN request body",
                         "name": "request",
@@ -705,12 +659,6 @@ const docTemplate = `{
                 "summary": "Check current user PIN",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
-                    {
                         "description": "Check PIN request body",
                         "name": "request",
                         "in": "body",
@@ -770,12 +718,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get current user transaction report",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    },
                     {
                         "enum": [
                             "7d"
@@ -842,14 +784,6 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "Get current user wallet dashboard",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Set true when using a raw token from Swagger UI",
-                        "name": "X-Swagger",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Get Dashboard Information Successfully",

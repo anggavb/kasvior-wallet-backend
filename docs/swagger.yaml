@@ -199,11 +199,6 @@ paths:
       consumes:
       - application/json
       description: Invalidate the current bearer token.
-      parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       produces:
       - application/json
       responses:
@@ -306,10 +301,6 @@ paths:
       - application/json
       description: Create a topup transaction for the authenticated user.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Topup request body
         in: body
         name: request
@@ -348,10 +339,6 @@ paths:
     get:
       description: Get receiver suggestions for the authenticated user.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Receiver name or phone number search keyword
         in: query
         maxLength: 100
@@ -396,11 +383,6 @@ paths:
   /users/me/:
     get:
       description: Get profile information for the authenticated user.
-      parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       produces:
       - application/json
       responses:
@@ -427,10 +409,6 @@ paths:
       description: Update at least one profile field for the authenticated user. Profile
         fields are limited to 255 characters.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Update profile request body
         in: body
         name: request
@@ -471,10 +449,6 @@ paths:
       - application/json
       description: Update the authenticated user's password.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Update password request body
         in: body
         name: request
@@ -515,10 +489,6 @@ paths:
       - application/json
       description: Update the authenticated user's 6-digit numeric PIN.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Update PIN request body
         in: body
         name: request
@@ -559,10 +529,6 @@ paths:
       - application/json
       description: Validate the authenticated user's 6-digit numeric PIN.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - description: Check PIN request body
         in: body
         name: request
@@ -602,10 +568,6 @@ paths:
       description: Get the authenticated user's transaction report for the last 7
         days.
       parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       - default: 7d
         description: Report duration
         enum:
@@ -650,11 +612,6 @@ paths:
     get:
       description: Get balance, income, and expense information for the authenticated
         user.
-      parameters:
-      - description: Set true when using a raw token from Swagger UI
-        in: header
-        name: X-Swagger
-        type: string
       produces:
       - application/json
       responses:
