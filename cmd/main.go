@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/kasvior-wallet-backend/internal/binder"
+	_ "github.com/kasvior-wallet-backend/internal/binder"
 	"github.com/kasvior-wallet-backend/internal/config"
 	"github.com/kasvior-wallet-backend/internal/router"
 )
@@ -31,7 +31,6 @@ func main() {
 	}
 
 	app := gin.Default()
-	binder.InitValidator()
 
 	conn, err := config.ConnectDB()
 	if err != nil {
