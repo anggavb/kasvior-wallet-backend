@@ -20,6 +20,35 @@ definitions:
     - email
     - password
     type: object
+  dto.PaginationMetaResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+    type: object
+  dto.ReceiverListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.ReceiverResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/dto.PaginationMetaResponse'
+    type: object
+  dto.ReceiverResponse:
+    properties:
+      id:
+        type: integer
+      phone_number:
+        type: string
+      photo:
+        type: string
+      receiver:
+        type: string
+      wallet_id:
+        type: string
+    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -418,7 +447,12 @@ paths:
         "200":
           description: Get Receivers Successfully
           schema:
-            $ref: '#/definitions/dto.Response'
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ReceiverListResponse'
+              type: object
         "400":
           description: Bad request
           schema:
