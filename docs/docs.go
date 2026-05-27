@@ -315,9 +315,72 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Topup Successfully!",
+                        "description": "Topup created",
                         "schema": {
                             "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/transaction/transfer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a pending transfer transaction for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Create transfer transaction",
+                "parameters": [
+                    {
+                        "description": "Transfer request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Transfer pending",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TransactionCreatedResponse"
                         }
                     },
                     "400": {
@@ -657,7 +720,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Validate the authenticated user's 6-digit numeric PIN.",
+                "description": "Validate the authenticated user's 6-digit numeric PIN. When transaction_id is provided, finalize the pending transfer.",
                 "consumes": [
                     "application/json"
                 ],
@@ -686,6 +749,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.Response"
                         }
                     },
+                    "204": {
+                        "description": "Transfer finalized"
+                    },
                     "400": {
                         "description": "Bad request",
                         "schema": {
@@ -694,6 +760,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Invalid PIN, PIN not set, or unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Transaction already finalized",
                         "schema": {
                             "$ref": "#/definitions/dto.Response"
                         }
@@ -938,6 +1010,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.TransactionCreatedResponse": {
+            "type": "object",
+            "properties": {
+                "transaction_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TransferRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "recipient_wallet_id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "recipient_wallet_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserCheckPinRequest": {
             "type": "object",
             "required": [
@@ -946,6 +1044,9 @@ const docTemplate = `{
             "properties": {
                 "pin": {
                     "type": "string"
+                },
+                "transaction_id": {
+                    "type": "integer"
                 }
             }
         },

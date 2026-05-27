@@ -85,10 +85,29 @@ definitions:
     - tax
     - type
     type: object
+  dto.TransactionCreatedResponse:
+    properties:
+      transaction_id:
+        type: integer
+    type: object
+  dto.TransferRequest:
+    properties:
+      amount:
+        type: integer
+      notes:
+        type: string
+      recipient_wallet_id:
+        type: string
+    required:
+    - amount
+    - recipient_wallet_id
+    type: object
   dto.UserCheckPinRequest:
     properties:
       pin:
         type: string
+      transaction_id:
+        type: integer
     required:
     - pin
     type: object
@@ -308,7 +327,7 @@ paths:
       - application/json
       responses:
         "201":
-          description: Topup Successfully!
+          description: Topup created
           schema:
             $ref: '#/definitions/dto.Response'
         "400":
@@ -330,6 +349,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create topup transaction
+      tags:
+      - Transactions
+  /transaction/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Create a pending transfer transaction for the authenticated user.
+      parameters:
+      - description: Transfer request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TransferRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Transfer pending
+          schema:
+            $ref: '#/definitions/dto.TransactionCreatedResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Create transfer transaction
       tags:
       - Transactions
   /transaction/transfer/receivers:
@@ -532,7 +591,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Validate the authenticated user's 6-digit numeric PIN.
+      description: Validate the authenticated user's 6-digit numeric PIN. When transaction_id
+        is provided, finalize the pending transfer.
       parameters:
       - description: Check PIN request body
         in: body
@@ -547,12 +607,18 @@ paths:
           description: PIN Valid
           schema:
             $ref: '#/definitions/dto.Response'
+        "204":
+          description: Transfer finalized
         "400":
           description: Bad request
           schema:
             $ref: '#/definitions/dto.Response'
         "401":
           description: Invalid PIN, PIN not set, or unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "409":
+          description: Transaction already finalized
           schema:
             $ref: '#/definitions/dto.Response'
         "422":
