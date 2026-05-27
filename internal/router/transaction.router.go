@@ -7,15 +7,16 @@ import (
 	"github.com/kasvior-wallet-backend/internal/middleware"
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/internal/service"
+	"github.com/redis/go-redis/v9"
 )
 
-func TransactionRouter(router *gin.Engine, db *pgxpool.Pool) {
-	authRepo := repository.NewAuthRepository(db)
+func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
+	authCache := repository.NewAuthCacheRepository(rdb)
 	transactionRepo := repository.NewTransactionRepository(db)
 	transactionService := service.NewTransactionService(transactionRepo, db)
 	transactionController := controller.NewTransactionController(transactionService)
 
-	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authRepo))
+	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authCache))
 
 	{ // use for scoping route
 		transactionRouter.POST("/topup", transactionController.CreateTopup)

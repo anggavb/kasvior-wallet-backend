@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -75,43 +74,7 @@ func (ar *AuthRepository) GetPasswordResetUserByEmail(ctx context.Context, email
 	return user, nil
 }
 
-func (ar *AuthRepository) SavePasswordResetToken(ctx context.Context, userId int, tokenHash string, expiresAt time.Time) error {
-	sql := `
-		INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-		VALUES ($1, $2, $3);
-	`
-	args := []any{userId, tokenHash, expiresAt}
-
-	_, err := ar.db.Exec(ctx, sql, args...)
-	return err
-}
-
-func (ar *AuthRepository) GetActivePasswordResetToken(ctx context.Context, tokenHash string) (model.PasswordResetToken, error) {
-	sql := `
-		SELECT id, user_id, token_hash, expires_at, used_at, created_at
-		FROM password_reset_tokens
-		WHERE token_hash = $1
-			AND used_at IS NULL
-			AND expires_at > NOW();
-	`
-	args := []any{tokenHash}
-
-	var token model.PasswordResetToken
-	if err := ar.db.QueryRow(ctx, sql, args...).Scan(
-		&token.Id,
-		&token.UserId,
-		&token.TokenHash,
-		&token.ExpiresAt,
-		&token.UsedAt,
-		&token.CreatedAt,
-	); err != nil {
-		return model.PasswordResetToken{}, err
-	}
-
-	return token, nil
-}
-
-func (ar *AuthRepository) UpdatePasswordAndUseResetToken(ctx context.Context, resetToken model.PasswordResetToken, hashedPassword string) error {
+func (ar *AuthRepository) UpdatePasswordById(ctx context.Context, userId int, hashedPassword string) error {
 	tx, err := ar.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
@@ -125,7 +88,7 @@ func (ar *AuthRepository) UpdatePasswordAndUseResetToken(ctx context.Context, re
 			updated_at = NOW()
 		WHERE id = $1;
 	`
-	userCmd, err := tx.Exec(ctx, userSQL, resetToken.UserId, hashedPassword)
+	userCmd, err := tx.Exec(ctx, userSQL, userId, hashedPassword)
 	if err != nil {
 		return err
 	}
@@ -133,75 +96,9 @@ func (ar *AuthRepository) UpdatePasswordAndUseResetToken(ctx context.Context, re
 		return pgx.ErrNoRows
 	}
 
-	tokenSQL := `
-		UPDATE password_reset_tokens
-		SET used_at = NOW()
-		WHERE id = $1
-			AND used_at IS NULL
-			AND expires_at > NOW();
-	`
-	tokenCmd, err := tx.Exec(ctx, tokenSQL, resetToken.Id)
-	if err != nil {
-		return err
-	}
-	if tokenCmd.RowsAffected() == 0 {
-		return pgx.ErrNoRows
-	}
-
-	activeTokenSQL := `
-		DELETE FROM active_tokens
-		WHERE user_id = $1;
-	`
-	if _, err := tx.Exec(ctx, activeTokenSQL, resetToken.UserId); err != nil {
-		return err
-	}
-
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (ar *AuthRepository) SaveToken(ctx context.Context, tokenHash string, userId int, expiresAt time.Time) error {
-	sql := `
-		INSERT INTO active_tokens (token_hash, user_id, expires_at)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (token_hash)
-		DO UPDATE SET user_id = EXCLUDED.user_id, expires_at = EXCLUDED.expires_at;
-	`
-	args := []any{tokenHash, userId, expiresAt}
-
-	_, err := ar.db.Exec(ctx, sql, args...)
-	return err
-}
-
-func (ar *AuthRepository) DeleteToken(ctx context.Context, tokenHash string) error {
-	sql := `
-		DELETE FROM active_tokens
-		WHERE token_hash = $1;
-	`
-	args := []any{tokenHash}
-
-	_, err := ar.db.Exec(ctx, sql, args...)
-	return err
-}
-
-func (ar *AuthRepository) IsTokenActive(ctx context.Context, tokenHash string) (bool, error) {
-	sql := `
-		SELECT EXISTS (
-			SELECT 1
-			FROM active_tokens
-			WHERE token_hash = $1
-				AND expires_at > NOW()
-		);
-	`
-	args := []any{tokenHash}
-
-	var isActive bool
-	if err := ar.db.QueryRow(ctx, sql, args...).Scan(&isActive); err != nil {
-		return false, err
-	}
-
-	return isActive, nil
 }

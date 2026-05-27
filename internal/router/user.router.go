@@ -7,16 +7,17 @@ import (
 	"github.com/kasvior-wallet-backend/internal/middleware"
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/internal/service"
+	"github.com/redis/go-redis/v9"
 )
 
-func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
-	authRepo := repository.NewAuthRepository(db)
+func UserRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
+	authCache := repository.NewAuthCacheRepository(rdb)
 	userRepo := repository.NewUserRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
-	userService := service.NewUserService(userRepo, transactionRepo, db)
+	userService := service.NewUserService(userRepo, transactionRepo, authCache, db)
 	userController := controller.NewUserController(userService)
 
-	userRouter := router.Group("/users", middleware.VerifyToken(authRepo))
+	userRouter := router.Group("/users", middleware.VerifyToken(authCache))
 
 	{
 		meRouter := userRouter.Group("/me")

@@ -18,13 +18,15 @@ type UserService struct {
 	db                    *pgxpool.Pool
 	userRepository        *repository.UserRepository
 	transactionRepository *repository.TransactionRepository
+	authCache             *repository.AuthCacheRepository
 }
 
-func NewUserService(userRepository *repository.UserRepository, transactionRepository *repository.TransactionRepository, db *pgxpool.Pool) *UserService {
+func NewUserService(userRepository *repository.UserRepository, transactionRepository *repository.TransactionRepository, authCache *repository.AuthCacheRepository, db *pgxpool.Pool) *UserService {
 	return &UserService{
 		db:                    db,
 		userRepository:        userRepository,
 		transactionRepository: transactionRepository,
+		authCache:             authCache,
 	}
 }
 
@@ -69,7 +71,11 @@ func (us *UserService) UpdatePassword(ctx context.Context, userId int, req dto.U
 	hash.UseRecommended()
 	hashedPassword := hash.GenerateHash(req.NewPassword)
 
-	return us.userRepository.UpdatePasswordById(ctx, userId, hashedPassword)
+	if err := us.userRepository.UpdatePasswordById(ctx, userId, hashedPassword); err != nil {
+		return err
+	}
+
+	return us.authCache.InvalidateUserTokens(ctx, userId)
 }
 
 func (us *UserService) UpdatePin(ctx context.Context, userId int, req dto.UserUpdatePinRequest) error {

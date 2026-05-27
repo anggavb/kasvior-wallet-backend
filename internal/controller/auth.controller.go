@@ -196,7 +196,13 @@ func (ac *AuthController) Logout(ctx *gin.Context) {
 		return
 	}
 
-	if err := ac.authService.LogoutUser(ctx.Request.Context(), tokenString, &expiresAt.Time); err != nil {
+	claims, ok := jwttoken.GetClaims(ctx)
+	if !ok {
+		response.JSONUnauthorized(ctx, "Unauthorized, please login!")
+		return
+	}
+
+	if err := ac.authService.LogoutUser(ctx.Request.Context(), tokenString, claims.UserId, &expiresAt.Time); err != nil {
 		log.Println("Error: ", err.Error())
 		if errors.Is(err, apperrors.ErrTokenAlreadyExpired) {
 			response.JSONUnauthorized(ctx, "Token already expired")

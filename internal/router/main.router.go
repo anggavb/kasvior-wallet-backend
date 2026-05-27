@@ -8,11 +8,12 @@ import (
 	_ "github.com/kasvior-wallet-backend/docs"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/middleware"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func InitRouter(router *gin.Engine, db *pgxpool.Pool) {
+func InitRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	router.Use(middleware.CORSMiddleware)
 
 	router.Static("/image", "public/img")
@@ -20,9 +21,9 @@ func InitRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	AuthRouter(router, db)
-	UserRouter(router, db)
-	TransactionRouter(router, db)
+	AuthRouter(router, db, rdb)
+	UserRouter(router, db, rdb)
+	TransactionRouter(router, db, rdb)
 
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, dto.Response{

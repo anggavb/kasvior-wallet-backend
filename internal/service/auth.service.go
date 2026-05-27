@@ -16,6 +16,7 @@ import (
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/pkg"
+	"github.com/redis/go-redis/v9"
 )
 
 type Mailer interface {
@@ -26,12 +27,14 @@ const passwordResetTokenTTL = 15 * time.Minute
 
 type AuthService struct {
 	authRepository *repository.AuthRepository
+	authCache      *repository.AuthCacheRepository
 	mailer         Mailer
 }
 
-func NewAuthService(authRepository *repository.AuthRepository, mailer Mailer) *AuthService {
+func NewAuthService(authRepository *repository.AuthRepository, authCache *repository.AuthCacheRepository, mailer Mailer) *AuthService {
 	return &AuthService{
 		authRepository: authRepository,
+		authCache:      authCache,
 		mailer:         mailer,
 	}
 }
@@ -70,7 +73,7 @@ func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dt
 		return dto.AuthResponse{}, err
 	}
 
-	if err := as.authRepository.SaveToken(ctx, hashToken(token), userLogin.Id, claims.ExpiresAt.Time); err != nil {
+	if err := as.authCache.SaveToken(ctx, hashToken(token), userLogin.Id, claims.ExpiresAt.Time); err != nil {
 		return dto.AuthResponse{}, err
 	}
 
@@ -81,7 +84,7 @@ func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dt
 	}, nil
 }
 
-func (as *AuthService) LogoutUser(ctx context.Context, token string, expiresAt *time.Time) error {
+func (as *AuthService) LogoutUser(ctx context.Context, token string, userId int, expiresAt *time.Time) error {
 	if expiresAt == nil {
 		return errors.New("missing token expiry")
 	}
@@ -89,7 +92,7 @@ func (as *AuthService) LogoutUser(ctx context.Context, token string, expiresAt *
 		return apperrors.ErrTokenAlreadyExpired
 	}
 
-	return as.authRepository.DeleteToken(ctx, hashToken(token))
+	return as.authCache.DeleteToken(ctx, hashToken(token), userId)
 }
 
 func (as *AuthService) ForgotPassword(ctx context.Context, request dto.ForgotPasswordRequest) error {
@@ -106,7 +109,7 @@ func (as *AuthService) ForgotPassword(ctx context.Context, request dto.ForgotPas
 		return err
 	}
 
-	if err := as.authRepository.SavePasswordResetToken(ctx, user.Id, hashToken(token), time.Now().Add(passwordResetTokenTTL)); err != nil {
+	if err := as.authCache.SavePasswordResetToken(ctx, user.Id, hashToken(token), passwordResetTokenTTL); err != nil {
 		return err
 	}
 
@@ -126,9 +129,9 @@ func (as *AuthService) ForgotPassword(ctx context.Context, request dto.ForgotPas
 }
 
 func (as *AuthService) ResetPassword(ctx context.Context, request dto.ResetPasswordRequest) error {
-	resetToken, err := as.authRepository.GetActivePasswordResetToken(ctx, hashToken(request.Token))
+	userId, err := as.authCache.ConsumePasswordResetToken(ctx, hashToken(request.Token))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, redis.Nil) {
 			return apperrors.ErrInvalidPasswordResetToken
 		}
 		return err
@@ -138,14 +141,14 @@ func (as *AuthService) ResetPassword(ctx context.Context, request dto.ResetPassw
 	hash.UseRecommended()
 
 	hashedPassword := hash.GenerateHash(request.NewPassword)
-	if err := as.authRepository.UpdatePasswordAndUseResetToken(ctx, resetToken, hashedPassword); err != nil {
+	if err := as.authRepository.UpdatePasswordById(ctx, userId, hashedPassword); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return apperrors.ErrInvalidPasswordResetToken
 		}
 		return err
 	}
 
-	return nil
+	return as.authCache.InvalidateUserTokens(ctx, userId)
 }
 
 func hashToken(token string) string {

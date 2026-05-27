@@ -8,19 +8,21 @@ import (
 	"github.com/kasvior-wallet-backend/internal/repository"
 	"github.com/kasvior-wallet-backend/internal/service"
 	"github.com/kasvior-wallet-backend/pkg"
+	"github.com/redis/go-redis/v9"
 )
 
-func AuthRouter(router *gin.Engine, db *pgxpool.Pool) {
+func AuthRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	authRouter := router.Group("/auth")
 
 	authRepo := repository.NewAuthRepository(db)
+	authCache := repository.NewAuthCacheRepository(rdb)
 	smtpMailer := pkg.NewSMTPMailerFromEnv()
-	authService := service.NewAuthService(authRepo, smtpMailer)
+	authService := service.NewAuthService(authRepo, authCache, smtpMailer)
 	authController := controller.NewAuthController(authService)
 
 	authRouter.POST("", authController.Login)
 	authRouter.POST("/register", authController.Register)
 	authRouter.POST("/forgot-password", authController.ForgotPassword)
 	authRouter.POST("/reset-password", authController.ResetPassword)
-	authRouter.DELETE("/logout", middleware.VerifyToken(authRepo), authController.Logout)
+	authRouter.DELETE("/logout", middleware.VerifyToken(authCache), authController.Logout)
 }
