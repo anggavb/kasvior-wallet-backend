@@ -215,7 +215,7 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 // @Failure		401		{object}	dto.Response				"Invalid PIN, PIN not set, or unauthorized"
 // @Failure		422		{object}	dto.Response				"Validation error"
 // @Failure		500		{object}	dto.Response				"Internal server error"
-// @Router			/users/me/pin/check [get]
+// @Router			/users/me/pin/check [post]
 func (uc *UserController) CheckPin(ctx *gin.Context) {
 	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {

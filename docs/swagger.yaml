@@ -529,7 +529,7 @@ paths:
       tags:
       - Users
   /users/me/pin/check:
-    get:
+    post:
       consumes:
       - application/json
       description: Validate the authenticated user's 6-digit numeric PIN.

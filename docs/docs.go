@@ -651,7 +651,7 @@ const docTemplate = `{
             }
         },
         "/users/me/pin/check": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
