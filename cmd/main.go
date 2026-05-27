@@ -43,6 +43,7 @@ func main() {
 	// Redis Connect
 	rdb := config.ConnectRedis()
 	defer rdb.Close()
+	log.Println("Redis Connected")
 
 	// install router
 	router.InitRouter(app, conn)
