@@ -8,5 +8,6 @@ import (
 )
 
 func ConnectDB() (*pgxpool.Pool, error) {
-	return pgxpool.New(context.Background(), os.Getenv("DB_URL"))
+	pg, _ := pgxpool.New(context.Background(), os.Getenv("DB_URL"))
+	return pg, pg.Ping(context.Background())
 }
