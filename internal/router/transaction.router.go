@@ -23,6 +23,7 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool) {
 
 	{ // use for scoping route
 		transferRouter := transactionRouter.Group("/transfer")
+		transferRouter.POST("", transactionController.CreateTransfer)
 		transferRouter.GET("/receivers", transactionController.FindReceivers)
 	}
 }

@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/repository"
@@ -12,12 +15,16 @@ import (
 )
 
 type UserService struct {
-	userRepository *repository.UserRepository
+	db                    *pgxpool.Pool
+	userRepository        *repository.UserRepository
+	transactionRepository *repository.TransactionRepository
 }
 
-func NewUserService(userRepository *repository.UserRepository) *UserService {
+func NewUserService(userRepository *repository.UserRepository, transactionRepository *repository.TransactionRepository, db *pgxpool.Pool) *UserService {
 	return &UserService{
-		userRepository: userRepository,
+		db:                    db,
+		userRepository:        userRepository,
+		transactionRepository: transactionRepository,
 	}
 }
 
@@ -69,21 +76,84 @@ func (us *UserService) UpdatePin(ctx context.Context, userId int, req dto.UserUp
 	return us.userRepository.UpdatePinById(ctx, userId, req.Pin)
 }
 
-func (us *UserService) CheckPin(ctx context.Context, userId int, pin string) (dto.UserCheckPinResponse, error) {
+func (us *UserService) CheckPin(ctx context.Context, userId int, req dto.UserCheckPinRequest) (dto.UserCheckPinResponse, error) {
 	user, err := us.userRepository.GetPinById(ctx, userId)
 	if err != nil {
 		return dto.UserCheckPinResponse{}, err
 	}
+
+	if req.TransactionId != nil {
+		return dto.UserCheckPinResponse{}, us.confirmTransfer(ctx, userId, user.Pin, req)
+	}
+
 	if user.Pin == nil {
 		return dto.UserCheckPinResponse{}, apperrors.ErrPinNotSet
 	}
 
 	storedPin := strings.TrimSpace(*user.Pin)
-	if pin != storedPin {
+	if req.Pin != storedPin {
 		return dto.UserCheckPinResponse{}, apperrors.ErrInvalidPin
 	}
 
 	return dto.UserCheckPinResponse{IsValid: true}, nil
+}
+
+func (us *UserService) confirmTransfer(ctx context.Context, userId int, storedPin *string, req dto.UserCheckPinRequest) error {
+	tx, err := us.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	transfer, err := us.transactionRepository.GetPendingTransferForUpdate(ctx, tx, userId, *req.TransactionId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.ErrTransactionNotFound
+		}
+		return err
+	}
+	if transfer.Status != "pending" {
+		return apperrors.ErrTransactionFinalized
+	}
+
+	if storedPin == nil {
+		if err := us.transactionRepository.UpdateTransactionStatus(ctx, tx, transfer.Id, "failed"); err != nil {
+			return err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return err
+		}
+		return apperrors.ErrPinNotSet
+	}
+
+	if req.Pin != strings.TrimSpace(*storedPin) {
+		if err := us.transactionRepository.UpdateTransactionStatus(ctx, tx, transfer.Id, "failed"); err != nil {
+			return err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return err
+		}
+		return apperrors.ErrInvalidPin
+	}
+
+	if err := us.transactionRepository.TransferWalletBalance(ctx, tx, transfer.SenderWalletId, transfer.RecipientWalletId, transfer.Amount); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			if updateErr := us.transactionRepository.UpdateTransactionStatus(ctx, tx, transfer.Id, "failed"); updateErr != nil {
+				return updateErr
+			}
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				return commitErr
+			}
+			return apperrors.ErrInsufficientBalance
+		}
+		return err
+	}
+
+	if err := us.transactionRepository.UpdateTransactionStatus(ctx, tx, transfer.Id, "success"); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (us *UserService) GetDashboardInformation(ctx context.Context, userId int) (dto.UserDashboardInformationResponse, error) {

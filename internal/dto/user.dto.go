@@ -43,7 +43,8 @@ type UserTransactionReportResponse struct {
 }
 
 type UserCheckPinRequest struct {
-	Pin string `json:"pin" binding:"required,len=6,numeric"`
+	Pin           string `json:"pin" binding:"required,len=6,numeric"`
+	TransactionId *int   `json:"transaction_id" binding:"omitnil,gt=0"`
 }
 
 type UserCheckPinResponse struct {

@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/dto"
@@ -63,31 +66,79 @@ func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentM
 	}, nil
 }
 
-func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, topup dto.TopupRequest) (string, error) {
+func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, topup dto.TopupRequest) error {
 	isSubtotalValid := *topup.SubTotal == (int(topup.Amount) - *topup.Discount + *topup.Tax)
 	if !isSubtotalValid {
-		return "", apperrors.InvalidSubtotal
+		return apperrors.InvalidSubtotal
 	}
 
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer tx.Rollback(ctx)
 
-	tid, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, topup.TypeTransaction, topup.Amount)
+	tid, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, topup.TypeTransaction, "success", topup.Amount)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	paymentMethod, err := ts.transactionRepository.CreateTopupTransactionDetails(ctx, tx, tid, topup)
-	if err != nil {
-		return "", err
+	if err := ts.transactionRepository.CreateTopupTransactionDetails(ctx, tx, tid, topup); err != nil {
+		return err
+	}
+
+	if err := ts.transactionRepository.IncrementWalletBalanceByUserId(ctx, tx, userId, topup.Amount); err != nil {
+		return err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return "", err
+		return err
 	}
 
-	return paymentMethod, err
+	return nil
+}
+
+func (ts *TransactionService) CreatePendingTransfer(ctx context.Context, userId int, transfer dto.TransferRequest) (dto.TransactionCreatedResponse, error) {
+	transfer.RecipientWalletId = strings.ToLower(transfer.RecipientWalletId)
+
+	tx, err := ts.db.Begin(ctx)
+	if err != nil {
+		return dto.TransactionCreatedResponse{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	senderWalletId, err := ts.transactionRepository.GetWalletIdByUserId(ctx, tx, userId)
+	if err != nil {
+		return dto.TransactionCreatedResponse{}, err
+	}
+
+	if senderWalletId == transfer.RecipientWalletId {
+		return dto.TransactionCreatedResponse{}, apperrors.ErrSelfTransfer
+	}
+
+	exists, err := ts.transactionRepository.WalletExists(ctx, tx, transfer.RecipientWalletId)
+	if err != nil {
+		return dto.TransactionCreatedResponse{}, err
+	}
+	if !exists {
+		return dto.TransactionCreatedResponse{}, apperrors.ErrInvalidRecipient
+	}
+
+	transactionId, err := ts.transactionRepository.CreateTransaction(ctx, tx, userId, "transfer", "pending", transfer.Amount)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.TransactionCreatedResponse{}, apperrors.ErrInvalidRecipient
+		}
+		return dto.TransactionCreatedResponse{}, err
+	}
+
+	if err := ts.transactionRepository.CreateTransferDetail(ctx, tx, transactionId, transfer); err != nil {
+		return dto.TransactionCreatedResponse{}, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return dto.TransactionCreatedResponse{}, err
+	}
+
+	return dto.TransactionCreatedResponse{TransactionId: transactionId}, nil
 }

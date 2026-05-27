@@ -204,15 +204,17 @@ func (uc *UserController) UpdatePin(ctx *gin.Context) {
 
 // CheckPin godoc
 // @Summary		Check current user PIN
-// @Description	Validate the authenticated user's 6-digit numeric PIN.
+// @Description	Validate the authenticated user's 6-digit numeric PIN. When transaction_id is provided, finalize the pending transfer.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
 // @Param			request	body		dto.UserCheckPinRequest	true	"Check PIN request body"
 // @Success		200		{object}	dto.Response				"PIN Valid"
+// @Success		204		"Transfer finalized"
 // @Failure		400		{object}	dto.Response				"Bad request"
 // @Failure		401		{object}	dto.Response				"Invalid PIN, PIN not set, or unauthorized"
+// @Failure		409		{object}	dto.Response				"Transaction already finalized"
 // @Failure		422		{object}	dto.Response				"Validation error"
 // @Failure		500		{object}	dto.Response				"Internal server error"
 // @Router			/users/me/pin/check [post]
@@ -233,7 +235,7 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 		return
 	}
 
-	res, err := uc.userService.CheckPin(ctx.Request.Context(), claims.UserId, body.Pin)
+	res, err := uc.userService.CheckPin(ctx.Request.Context(), claims.UserId, body)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrInvalidPin) {
 			log.Println("Invalid PIN: ", err.Error())
@@ -245,9 +247,29 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 			response.JSONUnauthorized(ctx, "PIN not set")
 			return
 		}
+		if errors.Is(err, apperrors.ErrInsufficientBalance) {
+			log.Println("Insufficient balance: ", err.Error())
+			response.JSONBadRequestWithMessage(ctx, "Insufficient balance")
+			return
+		}
+		if errors.Is(err, apperrors.ErrTransactionNotFound) {
+			log.Println("Transaction not found: ", err.Error())
+			response.JSONBadRequestWithMessage(ctx, "Transaction not found")
+			return
+		}
+		if errors.Is(err, apperrors.ErrTransactionFinalized) {
+			log.Println("Transaction already finalized: ", err.Error())
+			response.JSONDuplicate(ctx, "Transaction already finalized")
+			return
+		}
 
 		log.Println("Error: ", err.Error())
 		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	if body.TransactionId != nil {
+		response.JSONNoContent(ctx)
 		return
 	}
 

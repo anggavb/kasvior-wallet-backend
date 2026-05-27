@@ -18,3 +18,11 @@ type Transaction struct {
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 }
+
+type TransferTransaction struct {
+	Id                int
+	SenderWalletId    string
+	RecipientWalletId string
+	Amount            float64
+	Status            string
+}

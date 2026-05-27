@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"log"
 	"strings"
 
@@ -80,7 +81,7 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 // @Produce		json
 // @Security		ApiKeyAuth
 // @Param			request		body		dto.TopupRequest	true	"Topup request body"
-// @Success		201			{object}	dto.Response		"Topup Successfully!"
+// @Success		201			{object}	dto.Response		"Topup created"
 // @Failure		400			{object}	dto.Response		"Bad request"
 // @Failure		401			{object}	dto.Response		"Unauthorized"
 // @Failure		422			{object}	dto.Response		"Validation error"
@@ -103,9 +104,8 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		return
 	}
 
-	paymentMethod, err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, body)
-	if err != nil {
-		if err.Error() == apperrors.InvalidSubtotal.Error() {
+	if err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, body); err != nil {
+		if errors.Is(err, apperrors.InvalidSubtotal) {
 			log.Println("Error: ", err.Error())
 			response.JSONBadRequest(ctx)
 			return
@@ -115,11 +115,55 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 		return
 	}
 
-	response.JSONCreated(ctx, dto.TopupResponse{
-		Amount:        body.Amount,
-		PaymentMethod: paymentMethod,
-		Discount:      *body.Discount,
-		Tax:           *body.Tax,
-		SubTotal:      *body.SubTotal,
-	}, "Topup Successfully!")
+	response.JSONCreated(ctx, nil, "Topup successfully")
+}
+
+// CreateTransfer godoc
+// @Summary		Create transfer transaction
+// @Description	Create a pending transfer transaction for the authenticated user.
+// @Tags			Transactions
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			request	body		dto.TransferRequest				true	"Transfer request body"
+// @Success		201		{object}	dto.TransactionCreatedResponse	"Transfer pending"
+// @Failure		400		{object}	dto.Response					"Bad request"
+// @Failure		401		{object}	dto.Response					"Unauthorized"
+// @Failure		422		{object}	dto.Response					"Validation error"
+// @Failure		500		{object}	dto.Response					"Internal server error"
+// @Router			/transaction/transfer [post]
+func (tc *TransactionController) CreateTransfer(ctx *gin.Context) {
+	claims, ok := jwttoken.GetClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var body dto.TransferRequest
+	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
+		errorMessages := binder.FormatValidationError(err)
+		if len(errorMessages) > 0 && errorMessages["error"] != "" {
+			response.JSONBadRequest(ctx)
+			return
+		}
+		response.JSONUnprocessableEntity(ctx, errorMessages)
+		return
+	}
+
+	res, err := tc.transactionService.CreatePendingTransfer(ctx.Request.Context(), claims.UserId, body)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrInvalidRecipient) {
+			response.JSONBadRequestWithMessage(ctx, "Invalid recipient wallet")
+			return
+		}
+		if errors.Is(err, apperrors.ErrSelfTransfer) {
+			response.JSONBadRequestWithMessage(ctx, "Cannot transfer to own wallet")
+			return
+		}
+
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONCreated(ctx, res, "Transfer pending")
 }

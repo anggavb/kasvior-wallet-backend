@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kasvior-wallet-backend/internal/apperrors"
 	"github.com/kasvior-wallet-backend/internal/dto"
 	"github.com/kasvior-wallet-backend/internal/model"
 )
@@ -78,40 +78,160 @@ func (tr *TransactionRepository) GetPaymentMethodById(ctx context.Context, dbtx 
 	return paymentMethod, nil
 }
 
-func (tr *TransactionRepository) CreateTransaction(ctx context.Context, dbtx DBTX, userId int, typeTransaction string, amount uint) (int, error) {
+func (tr *TransactionRepository) CreateTransaction(ctx context.Context, dbtx DBTX, userId int, typeTransaction, status string, amount uint) (int, error) {
 	sql := `
 		INSERT INTO transactions (wallet_id, amount, type, status)
-		SELECT id, $2, $3, 'success'
+		SELECT id, $2, $3, $4
 		FROM wallets
 		WHERE user_id = $1
 		RETURNING id;
 	`
-	args := []any{userId, amount, typeTransaction}
+	args := []any{userId, amount, typeTransaction, status}
 
 	var transactionId int
 	if err := dbtx.QueryRow(ctx, sql, args...).Scan(&transactionId); err != nil {
 		return 0, err
 	}
-	log.Println(transactionId)
 
 	return transactionId, nil
 }
 
-func (tr *TransactionRepository) CreateTopupTransactionDetails(ctx context.Context, dbtx DBTX, transactionId int, topup dto.TopupRequest) (string, error) {
+func (tr *TransactionRepository) CreateTopupTransactionDetails(ctx context.Context, dbtx DBTX, transactionId int, topup dto.TopupRequest) error {
 	sql := `
-		WITH topup AS (
-			INSERT INTO topup_details (transaction_id, payment_method_id, discount, tax, sub_total)
-			VALUES ($1, $2, $3, $4, $5)
-			RETURNING payment_method_id
-		)
-		SELECT name FROM payment_methods WHERE id = (SELECT payment_method_id FROM topup);
+		INSERT INTO topup_details (transaction_id, payment_method_id, discount, tax, sub_total)
+		VALUES ($1, $2, $3, $4, $5);
 	`
 	args := []any{transactionId, topup.PaymentMethodId, *topup.Discount, *topup.Tax, *topup.SubTotal}
 
-	var paymentMethod string
-	if err := dbtx.QueryRow(ctx, sql, args...).Scan(&paymentMethod); err != nil {
+	_, err := dbtx.Exec(ctx, sql, args...)
+	return err
+}
+
+func (tr *TransactionRepository) IncrementWalletBalanceByUserId(ctx context.Context, dbtx DBTX, userId int, amount uint) error {
+	sql := `
+		UPDATE wallets
+		SET balance = balance + $2
+		WHERE user_id = $1;
+	`
+
+	_, err := dbtx.Exec(ctx, sql, userId, amount)
+	return err
+}
+
+func (tr *TransactionRepository) GetWalletIdByUserId(ctx context.Context, dbtx DBTX, userId int) (string, error) {
+	sql := `
+		SELECT id::text
+		FROM wallets
+		WHERE user_id = $1;
+	`
+
+	var walletId string
+	if err := dbtx.QueryRow(ctx, sql, userId).Scan(&walletId); err != nil {
 		return "", err
 	}
 
-	return paymentMethod, nil
+	return walletId, nil
+}
+
+func (tr *TransactionRepository) WalletExists(ctx context.Context, dbtx DBTX, walletId string) (bool, error) {
+	sql := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM wallets
+			WHERE id = $1
+		);
+	`
+
+	var exists bool
+	if err := dbtx.QueryRow(ctx, sql, walletId).Scan(&exists); err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (tr *TransactionRepository) CreateTransferDetail(ctx context.Context, dbtx DBTX, transactionId int, transfer dto.TransferRequest) error {
+	sql := `
+		INSERT INTO transfer_details (transaction_id, recipient_wallet_id, notes)
+		VALUES ($1, $2, $3);
+	`
+
+	_, err := dbtx.Exec(ctx, sql, transactionId, transfer.RecipientWalletId, transfer.Notes)
+	return err
+}
+
+func (tr *TransactionRepository) GetPendingTransferForUpdate(ctx context.Context, dbtx DBTX, userId, transactionId int) (model.TransferTransaction, error) {
+	sql := `
+		SELECT
+			t.id,
+			t.wallet_id::text,
+			td.recipient_wallet_id::text,
+			t.amount,
+			t.status
+		FROM transactions t
+		JOIN wallets w ON w.id = t.wallet_id
+		JOIN transfer_details td ON td.transaction_id = t.id
+		WHERE t.id = $1
+			AND w.user_id = $2
+			AND t.type = 'transfer'
+		FOR UPDATE OF t;
+	`
+
+	var transfer model.TransferTransaction
+	if err := dbtx.QueryRow(ctx, sql, transactionId, userId).Scan(
+		&transfer.Id,
+		&transfer.SenderWalletId,
+		&transfer.RecipientWalletId,
+		&transfer.Amount,
+		&transfer.Status,
+	); err != nil {
+		return model.TransferTransaction{}, err
+	}
+
+	return transfer, nil
+}
+
+func (tr *TransactionRepository) UpdateTransactionStatus(ctx context.Context, dbtx DBTX, transactionId int, status string) error {
+	sql := `
+		UPDATE transactions
+		SET status = $2,
+			updated_at = NOW()
+		WHERE id = $1;
+	`
+
+	_, err := dbtx.Exec(ctx, sql, transactionId, status)
+	return err
+}
+
+func (tr *TransactionRepository) TransferWalletBalance(ctx context.Context, dbtx DBTX, senderWalletId, recipientWalletId string, amount float64) error {
+	debitSQL := `
+		UPDATE wallets
+		SET balance = balance - $2
+		WHERE id = $1
+			AND balance >= $2;
+	`
+
+	debitTag, err := dbtx.Exec(ctx, debitSQL, senderWalletId, amount)
+	if err != nil {
+		return err
+	}
+	if debitTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	creditSQL := `
+		UPDATE wallets
+		SET balance = balance + $2
+		WHERE id = $1;
+	`
+
+	creditTag, err := dbtx.Exec(ctx, creditSQL, recipientWalletId, amount)
+	if err != nil {
+		return err
+	}
+	if creditTag.RowsAffected() == 0 {
+		return apperrors.ErrInvalidRecipient
+	}
+
+	return nil
 }

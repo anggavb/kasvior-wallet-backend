@@ -1,5 +1,9 @@
 package dto
 
+type TransactionCreatedResponse struct {
+	TransactionId int `json:"transaction_id"`
+}
+
 type TopupRequest struct {
 	Amount          uint   `json:"amount" binding:"required,gt=0"`
 	TypeTransaction string `json:"type" binding:"required,oneof=topup transfer receiver"`
@@ -9,10 +13,8 @@ type TopupRequest struct {
 	SubTotal        *int   `json:"sub_total" binding:"required,gte=0"`
 }
 
-type TopupResponse struct {
-	Amount        uint   `json:"amount"`
-	PaymentMethod string `json:"payment_method"`
-	Discount      int    `json:"discount"`
-	Tax           int    `json:"tax"`
-	SubTotal      int    `json:"sub_total"`
+type TransferRequest struct {
+	RecipientWalletId string  `json:"recipient_wallet_id" binding:"required,uuid"`
+	Amount            uint    `json:"amount" binding:"required,gt=0"`
+	Notes             *string `json:"notes"`
 }

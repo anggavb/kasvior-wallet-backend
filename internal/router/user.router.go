@@ -12,7 +12,8 @@ import (
 func UserRouter(router *gin.Engine, db *pgxpool.Pool) {
 	authRepo := repository.NewAuthRepository(db)
 	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
+	transactionRepo := repository.NewTransactionRepository(db)
+	userService := service.NewUserService(userRepo, transactionRepo, db)
 	userController := controller.NewUserController(userService)
 
 	userRouter := router.Group("/users", middleware.VerifyToken(authRepo))
