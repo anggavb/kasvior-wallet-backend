@@ -134,14 +134,14 @@ func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userI
 			w.balance AS balance,
 			SUM(
 				CASE
-					WHEN t.status = 'success' AND t.type IN ('topup', 'receiver')
+					WHEN t.status = 'success' AND t.type = 'transfer' AND t.wallet_id != w.id
 					THEN t.amount
 					ELSE 0
 				END
 			) AS income,
 			SUM(
 				CASE
-					WHEN t.status = 'success' AND t.type = 'transfer'
+					WHEN t.status = 'success' AND t.type = 'transfer' AND t.wallet_id = w.id
 					THEN t.amount
 					ELSE 0
 				END
@@ -168,7 +168,7 @@ func (ur *UserRepository) GetTransactionReportById(ctx context.Context, userId i
 			SUM(
 				CASE
 					WHEN $2 IN ('all', 'income')
-						AND t.type IN ('topup', 'receiver')
+						AND t.status = 'success' AND t.type = 'transfer' AND t.wallet_id != w.id
 					THEN t.amount
 					ELSE 0
 				END
@@ -176,7 +176,7 @@ func (ur *UserRepository) GetTransactionReportById(ctx context.Context, userId i
 			SUM(
 				CASE
 					WHEN $2 IN ('all', 'expense')
-						AND t.type = 'transfer'
+						AND t.status = 'success' AND t.type = 'transfer' AND t.wallet_id = w.id
 					THEN t.amount
 					ELSE 0
 				END

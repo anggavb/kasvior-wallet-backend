@@ -20,3 +20,6 @@ CREATE TABLE "transactions" (
   "updated_at" timestamp,
   FOREIGN KEY ("wallet_id") REFERENCES "wallets" ("id") DEFERRABLE INITIALLY IMMEDIATE
 );
+
+CREATE INDEX "idx_transactions_wallet_status_type_created_at"
+  ON "transactions" ("wallet_id", "status", "type", "created_at");
