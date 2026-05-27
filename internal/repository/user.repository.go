@@ -147,7 +147,7 @@ func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userI
 				END
 			) AS expense
 		FROM wallets w
-		LEFT JOIN transactions t ON t.user_id = w.user_id
+		LEFT JOIN transactions t ON t.wallet_id = w.id
 		WHERE w.user_id = $1
 		GROUP BY w.balance;
 	`
@@ -182,7 +182,8 @@ func (ur *UserRepository) GetTransactionReportById(ctx context.Context, userId i
 				END
 			) AS expense
 		FROM transactions t
-		WHERE t.user_id = $1
+		JOIN wallets w ON w.id = t.wallet_id
+		WHERE w.user_id = $1
 			AND t.status = 'success'
 			AND t.created_at >= $3
 			AND t.created_at < $4

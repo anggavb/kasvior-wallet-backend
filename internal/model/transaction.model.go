@@ -11,7 +11,7 @@ type Receiver struct {
 
 type Transaction struct {
 	Id        int
-	UserId    int
+	WalletId  string
 	Amount    int
 	Type      string
 	Status    string

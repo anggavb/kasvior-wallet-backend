@@ -80,8 +80,10 @@ func (tr *TransactionRepository) GetPaymentMethodById(ctx context.Context, dbtx 
 
 func (tr *TransactionRepository) CreateTransaction(ctx context.Context, dbtx DBTX, userId int, typeTransaction string, amount uint) (int, error) {
 	sql := `
-		INSERT INTO transactions (user_id, amount, type, status)
-		VALUES ($1, $2, $3, 'success')
+		INSERT INTO transactions (wallet_id, amount, type, status)
+		SELECT id, $2, $3, 'success'
+		FROM wallets
+		WHERE user_id = $1
 		RETURNING id;
 	`
 	args := []any{userId, amount, typeTransaction}
