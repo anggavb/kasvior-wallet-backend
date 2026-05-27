@@ -32,12 +32,17 @@ func main() {
 
 	app := gin.Default()
 
+	// PostgreSQL Connect
 	conn, err := config.ConnectDB()
 	if err != nil {
 		log.Fatalf("DB connection error. \ncause: %s", err.Error())
 	}
 	defer conn.Close()
 	log.Println("DB Connected")
+
+	// Redis Connect
+	rdb := config.ConnectRedis()
+	defer rdb.Close()
 
 	// install router
 	router.InitRouter(app, conn)
