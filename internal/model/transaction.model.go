@@ -4,6 +4,7 @@ import "time"
 
 type Receiver struct {
 	Id          int
+	WalletId    string
 	Photo       *string
 	Receiver    *string
 	PhoneNumber *string

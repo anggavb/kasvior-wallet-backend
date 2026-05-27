@@ -36,6 +36,7 @@ func (ts *TransactionService) FindReceivers(ctx context.Context, userId int, sea
 	for _, receiver := range receivers {
 		items = append(items, dto.ReceiverResponse{
 			Id:          receiver.Id,
+			WalletId:    receiver.WalletId,
 			Photo:       receiver.Photo,
 			Receiver:    receiver.Receiver,
 			PhoneNumber: receiver.PhoneNumber,

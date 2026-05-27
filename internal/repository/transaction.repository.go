@@ -25,14 +25,15 @@ func NewTransactionRepository(db *pgxpool.Pool) *TransactionRepository {
 
 func (tr *TransactionRepository) FindReceivers(ctx context.Context, dbtx DBTX, userId int, search string, limit, offset int) ([]model.Receiver, error) {
 	sqlQuery := `
-		SELECT id, photo, COALESCE(fullname, email) AS receiver, phone_number
-		FROM users
-		WHERE id != $1
+		SELECT u.id, w.id::text AS wallet_id, u.photo, COALESCE(u.fullname, u.email) AS receiver, u.phone_number
+		FROM users u
+		JOIN wallets w ON w.user_id = u.id
+		WHERE u.id != $1
 			AND (
-				COALESCE(fullname, email) ILIKE $2 || '%'
-				OR phone_number ILIKE $2 || '%'
+				COALESCE(u.fullname, u.email) ILIKE $2 || '%'
+				OR u.phone_number ILIKE $2 || '%'
 			)
-		ORDER BY COALESCE(fullname, email) ASC
+		ORDER BY COALESCE(u.fullname, u.email) ASC
 		LIMIT $3
 		OFFSET $4;
 	`
@@ -47,7 +48,7 @@ func (tr *TransactionRepository) FindReceivers(ctx context.Context, dbtx DBTX, u
 	receivers := []model.Receiver{}
 	for rows.Next() {
 		var receiver model.Receiver
-		if err := rows.Scan(&receiver.Id, &receiver.Photo, &receiver.Receiver, &receiver.PhoneNumber); err != nil {
+		if err := rows.Scan(&receiver.Id, &receiver.WalletId, &receiver.Photo, &receiver.Receiver, &receiver.PhoneNumber); err != nil {
 			return nil, err
 		}
 

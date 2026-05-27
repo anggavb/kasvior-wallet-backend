@@ -34,7 +34,7 @@ func NewTransactionController(transactionService *service.TransactionService) *T
 // @Param			search		query		string	false	"Receiver name or phone number search keyword"	maxlength(100)
 // @Param			page		query		int		false	"Page number"	default(1)
 // @Param			limit		query		int		false	"Items per page"	minimum(1)	maximum(100)	default(10)
-// @Success		200			{object}	dto.Response	"Get Receivers Successfully"
+// @Success		200			{object}	dto.Response{data=dto.ReceiverListResponse}	"Get Receivers Successfully"
 // @Failure		400			{object}	dto.Response	"Bad request"
 // @Failure		401			{object}	dto.Response	"Unauthorized"
 // @Failure		500			{object}	dto.Response	"Internal server error"

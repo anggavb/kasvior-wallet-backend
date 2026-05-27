@@ -2,6 +2,7 @@ package dto
 
 type ReceiverResponse struct {
 	Id          int     `json:"id"`
+	WalletId    string  `json:"wallet_id"`
 	Photo       *string `json:"photo"`
 	Receiver    *string `json:"receiver"`
 	PhoneNumber *string `json:"phone_number"`
