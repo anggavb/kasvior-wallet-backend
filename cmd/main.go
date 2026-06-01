@@ -27,7 +27,7 @@ import (
 // @description					Bearer token used for authorization. Example: Bearer <token>
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env. \ncause: %s", err.Error())
+		log.Printf("No .env file loaded, using environment variables. cause: %s", err.Error())
 	}
 
 	app := gin.Default()
