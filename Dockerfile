@@ -31,6 +31,4 @@ USER app
 
 EXPOSE 8080
 
-VOLUME ["/app/public/img"]
-
 ENTRYPOINT ["/app/kasvior-wallet"]
