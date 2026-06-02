@@ -222,6 +222,44 @@ func (tr *TransactionRepository) GetPaymentMethodById(ctx context.Context, dbtx 
 	return paymentMethod, nil
 }
 
+func (tr *TransactionRepository) FindPaymentMethods(ctx context.Context, dbtx DBTX) ([]model.PaymentMethod, error) {
+	sql := `
+		SELECT id, name, logo, method, tax, created_at, updated_at
+		FROM payment_methods
+		ORDER BY id ASC;
+	`
+
+	rows, err := dbtx.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	paymentMethods := []model.PaymentMethod{}
+	for rows.Next() {
+		var paymentMethod model.PaymentMethod
+		if err := rows.Scan(
+			&paymentMethod.Id,
+			&paymentMethod.Name,
+			&paymentMethod.Logo,
+			&paymentMethod.Method,
+			&paymentMethod.Tax,
+			&paymentMethod.CreatedAt,
+			&paymentMethod.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		paymentMethods = append(paymentMethods, paymentMethod)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return paymentMethods, nil
+}
+
 func (tr *TransactionRepository) CreateTransaction(ctx context.Context, dbtx DBTX, userId int, typeTransaction, status string, amount uint) (int, error) {
 	sql := `
 		INSERT INTO transactions (wallet_id, amount, type, status)

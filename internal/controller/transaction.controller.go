@@ -119,6 +119,31 @@ func (tc *TransactionController) FindHistory(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "Get Transaction History Successfully")
 }
 
+// FindPaymentMethods godoc
+// @Summary		Get payment methods
+// @Description	Get available payment methods for topup.
+// @Tags			Transactions
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	dto.Response{data=dto.PaymentMethodListResponse}	"Get Payment Methods Successfully"
+// @Failure		401	{object}	dto.Response	"Unauthorized"
+// @Failure		500	{object}	dto.Response	"Internal server error"
+// @Router			/transaction/payment-methods [get]
+func (tc *TransactionController) FindPaymentMethods(ctx *gin.Context) {
+	if _, ok := jwttoken.GetClaims(ctx); !ok {
+		return
+	}
+
+	res, err := tc.transactionService.FindPaymentMethods(ctx.Request.Context())
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, res, "Get Payment Methods Successfully")
+}
+
 // CreateTopup godoc
 // @Summary		Create topup transaction
 // @Description	Create a topup transaction for the authenticated user.
@@ -151,7 +176,9 @@ func (tc *TransactionController) CreateTopup(ctx *gin.Context) {
 	}
 
 	if err := tc.transactionService.CreateTransactionWithDetails(ctx.Request.Context(), claims.UserId, body); err != nil {
-		if errors.Is(err, apperrors.InvalidSubtotal) {
+		if errors.Is(err, apperrors.InvalidSubtotal) ||
+			errors.Is(err, apperrors.InvalidPaymentMethodType) ||
+			errors.Is(err, apperrors.ErrInvalidPaymentMethod) {
 			log.Println("Error: ", err.Error())
 			response.JSONBadRequest(ctx)
 			return

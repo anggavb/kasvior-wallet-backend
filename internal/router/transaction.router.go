@@ -20,6 +20,7 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) 
 
 	{ // use for scoping route
 		transactionRouter.GET("/history", transactionController.FindHistory)
+		transactionRouter.GET("/payment-methods", transactionController.FindPaymentMethods)
 		transactionRouter.POST("/topup", transactionController.CreateTopup)
 	}
 

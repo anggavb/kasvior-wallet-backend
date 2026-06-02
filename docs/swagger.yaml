@@ -27,6 +27,26 @@ definitions:
       page:
         type: integer
     type: object
+  dto.PaymentMethodListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.PaymentMethodResponse'
+        type: array
+    type: object
+  dto.PaymentMethodResponse:
+    properties:
+      id:
+        type: integer
+      logo:
+        type: string
+      method:
+        type: string
+      name:
+        type: string
+      tax:
+        type: integer
+    type: object
   dto.ReceiverListResponse:
     properties:
       items:
@@ -438,6 +458,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get transaction history
+      tags:
+      - Transactions
+  /transaction/payment-methods:
+    get:
+      description: Get available payment methods for topup.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Payment Methods Successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PaymentMethodListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get payment methods
       tags:
       - Transactions
   /transaction/topup:

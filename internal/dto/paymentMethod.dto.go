@@ -7,3 +7,7 @@ type PaymentMethodResponse struct {
 	Method string `json:"method"`
 	Tax    int    `json:"tax"`
 }
+
+type PaymentMethodListResponse struct {
+	Items []PaymentMethodResponse `json:"items"`
+}

@@ -17,6 +17,8 @@ type TransactionService struct {
 	transactionRepository *repository.TransactionRepository
 }
 
+const bankTopupDiscount = 4000
+
 func NewTransactionService(transactionRepository *repository.TransactionRepository, db *pgxpool.Pool) *TransactionService {
 	return &TransactionService{
 		db:                    db,
@@ -93,6 +95,26 @@ func (ts *TransactionService) FindHistory(ctx context.Context, userId int, searc
 	}, nil
 }
 
+func (ts *TransactionService) FindPaymentMethods(ctx context.Context) (dto.PaymentMethodListResponse, error) {
+	paymentMethods, err := ts.transactionRepository.FindPaymentMethods(ctx, ts.db)
+	if err != nil {
+		return dto.PaymentMethodListResponse{}, err
+	}
+
+	items := make([]dto.PaymentMethodResponse, 0, len(paymentMethods))
+	for _, paymentMethod := range paymentMethods {
+		items = append(items, dto.PaymentMethodResponse{
+			Id:     paymentMethod.Id,
+			Name:   paymentMethod.Name,
+			Logo:   paymentMethod.Logo,
+			Method: paymentMethod.Method,
+			Tax:    paymentMethod.Tax,
+		})
+	}
+
+	return dto.PaymentMethodListResponse{Items: items}, nil
+}
+
 func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentMethodId int) (dto.PaymentMethodResponse, error) {
 	paymentMethod, err := ts.transactionRepository.GetPaymentMethodById(ctx, ts.db, paymentMethodId)
 	if err != nil {
@@ -109,6 +131,28 @@ func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentM
 }
 
 func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, userId int, topup dto.TopupRequest) error {
+	paymentMethod, err := ts.transactionRepository.GetPaymentMethodById(ctx, ts.db, topup.PaymentMethodId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.ErrInvalidPaymentMethod
+		}
+		return err
+	}
+
+	expectedDiscount := 0
+	switch paymentMethod.Method {
+	case "bank":
+		expectedDiscount = bankTopupDiscount
+	case "online":
+		expectedDiscount = 0
+	default:
+		return apperrors.InvalidPaymentMethodType
+	}
+
+	if *topup.Tax != paymentMethod.Tax || *topup.Discount != expectedDiscount {
+		return apperrors.InvalidSubtotal
+	}
+
 	isSubtotalValid := *topup.SubTotal == (int(topup.Amount) - *topup.Discount + *topup.Tax)
 	if !isSubtotalValid {
 		return apperrors.InvalidSubtotal
