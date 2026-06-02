@@ -78,9 +78,28 @@ func (as *AuthService) LoginUser(ctx context.Context, user dto.LoginRequest) (dt
 	}
 
 	hasPin := userLogin.Pin != nil
+	fullname := ""
+	if userLogin.Fullname != nil {
+		fullname = *userLogin.Fullname
+	}
+	phoneNumber := ""
+	if userLogin.PhoneNumber != nil {
+		phoneNumber = *userLogin.PhoneNumber
+	}
+	photo := ""
+	if userLogin.Photo != nil {
+		photo = *userLogin.Photo
+	}
+
 	return dto.AuthResponse{
-		Token:  token,
-		HasPin: &hasPin,
+		Id:          userLogin.Id,
+		Fullname:    fullname,
+		Email:       userLogin.Email,
+		PhoneNumber: phoneNumber,
+		Photo:       photo,
+		IsVerified:  userLogin.IsVerified,
+		HasPin:      &hasPin,
+		Token:       token,
 	}, nil
 }
 
