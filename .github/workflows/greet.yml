@@ -7,8 +7,5 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
-
       - name: Greet Message
         run: echo "Halo! Workflow GitHub Actions Anda berhasil berjalan."
