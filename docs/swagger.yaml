@@ -247,10 +247,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Logout Successfully
-          schema:
-            $ref: '#/definitions/dto.Response'
         "401":
           description: Unauthorized
           schema:

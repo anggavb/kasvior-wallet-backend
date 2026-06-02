@@ -147,11 +147,8 @@ const docTemplate = `{
                 ],
                 "summary": "Logout user",
                 "responses": {
-                    "200": {
-                        "description": "Logout Successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Response"
-                        }
+                    "204": {
+                        "description": "Logout Successfully"
                     },
                     "401": {
                         "description": "Unauthorized",

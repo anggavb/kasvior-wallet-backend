@@ -181,7 +181,7 @@ func (ac *AuthController) ResetPassword(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Success		200	{object}	dto.Response	"Logout Successfully"
+// @Success		204	"Logout Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
 // @Router			/auth/logout [delete]
