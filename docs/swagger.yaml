@@ -68,11 +68,8 @@ definitions:
         example: secreto123
         minLength: 8
         type: string
-      token:
-        type: string
     required:
     - new_password
-    - token
     type: object
   dto.Response:
     properties:
@@ -221,11 +218,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: If the email is registered, reset instructions have been sent
+          description: Reset password instructions have been sent
           schema:
             $ref: '#/definitions/dto.Response'
         "400":
           description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "404":
+          description: Email not found
           schema:
             $ref: '#/definitions/dto.Response'
         "422":
@@ -306,6 +307,11 @@ paths:
       - application/json
       description: Reset a user password using a valid password reset token.
       parameters:
+      - description: Password reset token
+        in: header
+        name: X-Reset-Token
+        required: true
+        type: string
       - description: Reset password request body
         in: body
         name: request

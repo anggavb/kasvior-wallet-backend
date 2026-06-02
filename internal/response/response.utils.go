@@ -46,6 +46,14 @@ func JSONDuplicate(ctx *gin.Context, message string) {
 	})
 }
 
+// Status 404 - Not Found
+func JSONNotFound(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusNotFound, dto.Response{
+		Message: message,
+		Error:   "Not Found",
+	})
+}
+
 // Status 422 - Unprocessable Entity
 func JSONUnprocessableEntity(ctx *gin.Context, errors map[string]string) {
 	ctx.JSON(http.StatusUnprocessableEntity, dto.Response{

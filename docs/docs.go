@@ -102,13 +102,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "If the email is registered, reset instructions have been sent",
+                        "description": "Reset password instructions have been sent",
                         "schema": {
                             "$ref": "#/definitions/dto.Response"
                         }
                     },
                     "400": {
                         "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Email not found",
                         "schema": {
                             "$ref": "#/definitions/dto.Response"
                         }
@@ -237,6 +243,13 @@ const docTemplate = `{
                 ],
                 "summary": "Reset password",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Password reset token",
+                        "name": "X-Reset-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Reset password request body",
                         "name": "request",
@@ -995,17 +1008,13 @@ const docTemplate = `{
         "dto.ResetPasswordRequest": {
             "type": "object",
             "required": [
-                "new_password",
-                "token"
+                "new_password"
             ],
             "properties": {
                 "new_password": {
                     "type": "string",
                     "minLength": 8,
                     "example": "secreto123"
-                },
-                "token": {
-                    "type": "string"
                 }
             }
         },

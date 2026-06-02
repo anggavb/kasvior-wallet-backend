@@ -110,8 +110,9 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Param			request	body		dto.ForgotPasswordRequest	true	"Forgot password request body"
-// @Success		200		{object}	dto.Response				"If the email is registered, reset instructions have been sent"
+// @Success		200		{object}	dto.Response				"Reset password instructions have been sent"
 // @Failure		400		{object}	dto.Response				"Bad request"
+// @Failure		404		{object}	dto.Response				"Email not found"
 // @Failure		422		{object}	dto.Response				"Validation error"
 // @Failure		500		{object}	dto.Response				"Internal server error"
 // @Router			/auth/forgot-password [post]
@@ -129,6 +130,10 @@ func (ac *AuthController) ForgotPassword(ctx *gin.Context) {
 
 	if err := ac.authService.ForgotPassword(ctx.Request.Context(), body); err != nil {
 		log.Println("Error: ", err.Error())
+		if errors.Is(err, apperrors.ErrEmailNotFound) {
+			response.JSONNotFound(ctx, "Email not found")
+			return
+		}
 		response.JSONInternalServerError(ctx)
 		return
 	}
@@ -142,6 +147,7 @@ func (ac *AuthController) ForgotPassword(ctx *gin.Context) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
+// @Param			X-Reset-Token	header	string						true	"Password reset token"
 // @Param			request	body		dto.ResetPasswordRequest	true	"Reset password request body"
 // @Success		200		{object}	dto.Response				"Reset Password Successfully"
 // @Failure		400		{object}	dto.Response				"Bad request"
@@ -150,6 +156,12 @@ func (ac *AuthController) ForgotPassword(ctx *gin.Context) {
 // @Failure		500		{object}	dto.Response				"Internal server error"
 // @Router			/auth/reset-password [post]
 func (ac *AuthController) ResetPassword(ctx *gin.Context) {
+	resetToken := ctx.GetHeader("X-Reset-Token")
+	if resetToken == "" {
+		response.JSONBadRequestWithMessage(ctx, "Reset token is required")
+		return
+	}
+
 	var body dto.ResetPasswordRequest
 	if err := binder.BindFormat(ctx, &body, binding.JSON); err != nil {
 		errorMessages := binder.FormatValidationError(err)
@@ -161,7 +173,7 @@ func (ac *AuthController) ResetPassword(ctx *gin.Context) {
 		return
 	}
 
-	if err := ac.authService.ResetPassword(ctx.Request.Context(), body); err != nil {
+	if err := ac.authService.ResetPassword(ctx.Request.Context(), resetToken, body); err != nil {
 		log.Println("Error: ", err.Error())
 		if errors.Is(err, apperrors.ErrInvalidPasswordResetToken) {
 			response.JSONUnauthorized(ctx, "Invalid or expired reset token")

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -118,7 +119,8 @@ func (as *AuthService) ForgotPassword(ctx context.Context, request dto.ForgotPas
 	user, err := as.authRepository.GetPasswordResetUserByEmail(ctx, request.Email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil
+			log.Printf("Password reset requested for unregistered email: %s", request.Email)
+			return apperrors.ErrEmailNotFound
 		}
 		return err
 	}
@@ -144,11 +146,16 @@ func (as *AuthService) ForgotPassword(ctx context.Context, request dto.ForgotPas
 	subject := "Reset Password Kasvior Wallet"
 	body := fmt.Sprintf("Use this link to reset your password:\n\n%s\n\nThis link expires in 15 minutes.\n", resetLink)
 
-	return as.mailer.SendMail(ctx, user.Email, subject, body)
+	if err := as.mailer.SendMail(ctx, user.Email, subject, body); err != nil {
+		return err
+	}
+
+	log.Printf("Password reset email sent to %s", user.Email)
+	return nil
 }
 
-func (as *AuthService) ResetPassword(ctx context.Context, request dto.ResetPasswordRequest) error {
-	userId, err := as.authCache.ConsumePasswordResetToken(ctx, hashToken(request.Token))
+func (as *AuthService) ResetPassword(ctx context.Context, token string, request dto.ResetPasswordRequest) error {
+	userId, err := as.authCache.ConsumePasswordResetToken(ctx, hashToken(token))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return apperrors.ErrInvalidPasswordResetToken
