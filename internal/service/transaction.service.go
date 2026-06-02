@@ -52,6 +52,47 @@ func (ts *TransactionService) FindReceivers(ctx context.Context, userId int, sea
 	}, nil
 }
 
+func (ts *TransactionService) FindHistory(ctx context.Context, userId int, search string, page, limit int) (dto.TransactionHistoryResponse, error) {
+	offset := (page - 1) * limit
+
+	history, total, err := ts.transactionRepository.FindHistory(ctx, ts.db, userId, search, limit, offset)
+	if err != nil {
+		return dto.TransactionHistoryResponse{}, err
+	}
+
+	items := make([]dto.TransactionHistoryItemResponse, 0, len(history))
+	for _, item := range history {
+		items = append(items, dto.TransactionHistoryItemResponse{
+			Id:                item.Id,
+			Type:              item.Type,
+			Direction:         item.Direction,
+			Status:            item.Status,
+			Amount:            item.Amount,
+			CounterpartyName:  item.CounterpartyName,
+			CounterpartyPhone: item.CounterpartyPhone,
+			CounterpartyPhoto: item.CounterpartyPhoto,
+			PaymentMethod:     item.PaymentMethod,
+			Notes:             item.Notes,
+			CreatedAt:         item.CreatedAt,
+		})
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + limit - 1) / limit
+	}
+
+	return dto.TransactionHistoryResponse{
+		Items: items,
+		Meta: dto.TransactionHistoryMetaResponse{
+			Page:       page,
+			Limit:      limit,
+			Total:      total,
+			TotalPages: totalPages,
+		},
+	}, nil
+}
+
 func (ts *TransactionService) GetPaymentMethodById(ctx context.Context, paymentMethodId int) (dto.PaymentMethodResponse, error) {
 	paymentMethod, err := ts.transactionRepository.GetPaymentMethodById(ctx, ts.db, paymentMethodId)
 	if err != nil {

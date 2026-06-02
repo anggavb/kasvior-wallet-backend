@@ -73,6 +73,52 @@ func (tc *TransactionController) FindReceivers(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "Get Receivers Successfully")
 }
 
+// FindHistory godoc
+// @Summary		Get transaction history
+// @Description	Get authenticated user transaction history. Pending transactions are excluded.
+// @Tags			Transactions
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			q		query		string	false	"Search by counterparty, phone, type, payment method, or notes"	maxlength(100)
+// @Param			page	query		int		false	"Page number"												default(1)
+// @Param			limit	query		int		false	"Items per page"											minimum(1)	maximum(100)	default(5)
+// @Success		200		{object}	dto.Response{data=dto.TransactionHistoryResponse}	"Get Transaction History Successfully"
+// @Failure		400		{object}	dto.Response	"Bad request"
+// @Failure		401		{object}	dto.Response	"Unauthorized"
+// @Failure		500		{object}	dto.Response	"Internal server error"
+// @Router			/transaction/history [get]
+func (tc *TransactionController) FindHistory(ctx *gin.Context) {
+	claims, ok := jwttoken.GetClaims(ctx)
+	if !ok {
+		return
+	}
+
+	var query dto.TransactionHistoryQueryRequest
+	if err := binder.BindFormat(ctx, &query, binding.Query); err != nil {
+		response.JSONBadRequest(ctx)
+		return
+	}
+
+	page := 1
+	if query.Page != nil {
+		page = *query.Page
+	}
+
+	limit := 5
+	if query.Limit != nil {
+		limit = *query.Limit
+	}
+
+	res, err := tc.transactionService.FindHistory(ctx.Request.Context(), claims.UserId, strings.TrimSpace(query.Q), page, limit)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, res, "Get Transaction History Successfully")
+}
+
 // CreateTopup godoc
 // @Summary		Create topup transaction
 // @Description	Create a topup transaction for the authenticated user.

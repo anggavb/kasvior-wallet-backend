@@ -116,6 +116,51 @@ definitions:
       transaction_id:
         type: integer
     type: object
+  dto.TransactionHistoryItemResponse:
+    properties:
+      amount:
+        type: number
+      counterparty_name:
+        type: string
+      counterparty_phone:
+        type: string
+      counterparty_photo:
+        type: string
+      created_at:
+        type: string
+      direction:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      payment_method:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  dto.TransactionHistoryMetaResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.TransactionHistoryResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.TransactionHistoryItemResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/dto.TransactionHistoryMetaResponse'
+    type: object
   dto.TransferRequest:
     properties:
       amount:
@@ -344,6 +389,57 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /transaction/history:
+    get:
+      description: Get authenticated user transaction history. Pending transactions
+        are excluded.
+      parameters:
+      - description: Search by counterparty, phone, type, payment method, or notes
+        in: query
+        maxLength: 100
+        name: q
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Items per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Transaction History Successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TransactionHistoryResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get transaction history
+      tags:
+      - Transactions
   /transaction/topup:
     post:
       consumes:

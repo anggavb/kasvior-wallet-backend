@@ -19,6 +19,7 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) 
 	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authCache))
 
 	{ // use for scoping route
+		transactionRouter.GET("/history", transactionController.FindHistory)
 		transactionRouter.POST("/topup", transactionController.CreateTopup)
 	}
 

@@ -27,3 +27,17 @@ type TransferTransaction struct {
 	Amount            float64
 	Status            string
 }
+
+type TransactionHistoryItem struct {
+	Id                int
+	Type              string
+	Direction         string
+	Status            string
+	Amount            float64
+	CounterpartyName  *string
+	CounterpartyPhone *string
+	CounterpartyPhoto *string
+	PaymentMethod     *string
+	Notes             *string
+	CreatedAt         time.Time
+}

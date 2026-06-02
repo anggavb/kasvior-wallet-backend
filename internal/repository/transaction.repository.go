@@ -62,6 +62,149 @@ func (tr *TransactionRepository) FindReceivers(ctx context.Context, dbtx DBTX, u
 	return receivers, nil
 }
 
+func (tr *TransactionRepository) FindHistory(ctx context.Context, dbtx DBTX, userId int, search string, limit, offset int) ([]model.TransactionHistoryItem, int, error) {
+	baseQuery := `
+		WITH history AS (
+			SELECT
+				t.id,
+				t.type::text AS transaction_type,
+				'in'::text AS direction,
+				t.status::text AS status,
+				t.amount::float8 AS amount,
+				pm.name::text AS counterparty_name,
+				NULL::text AS counterparty_phone,
+				pm.logo::text AS counterparty_photo,
+				pm.name::text AS payment_method,
+				NULL::text AS notes,
+				t.created_at
+			FROM transactions t
+			JOIN wallets owner_wallet ON owner_wallet.id = t.wallet_id
+			JOIN topup_details td ON td.transaction_id = t.id
+			JOIN payment_methods pm ON pm.id = td.payment_method_id
+			WHERE owner_wallet.user_id = $1
+				AND t.type = 'topup'
+				AND t.status IN ('success', 'failed')
+
+			UNION ALL
+
+			SELECT
+				t.id,
+				t.type::text AS transaction_type,
+				'out'::text AS direction,
+				t.status::text AS status,
+				t.amount::float8 AS amount,
+				COALESCE(recipient.fullname, recipient.email)::text AS counterparty_name,
+				recipient.phone_number::text AS counterparty_phone,
+				recipient.photo::text AS counterparty_photo,
+				NULL::text AS payment_method,
+				td.notes::text AS notes,
+				t.created_at
+			FROM transactions t
+			JOIN wallets sender_wallet ON sender_wallet.id = t.wallet_id
+			JOIN transfer_details td ON td.transaction_id = t.id
+			JOIN wallets recipient_wallet ON recipient_wallet.id = td.recipient_wallet_id
+			JOIN users recipient ON recipient.id = recipient_wallet.user_id
+			WHERE sender_wallet.user_id = $1
+				AND t.type = 'transfer'
+				AND t.status IN ('success', 'failed')
+
+			UNION ALL
+
+			SELECT
+				t.id,
+				t.type::text AS transaction_type,
+				'in'::text AS direction,
+				t.status::text AS status,
+				t.amount::float8 AS amount,
+				COALESCE(sender.fullname, sender.email)::text AS counterparty_name,
+				sender.phone_number::text AS counterparty_phone,
+				sender.photo::text AS counterparty_photo,
+				NULL::text AS payment_method,
+				td.notes::text AS notes,
+				t.created_at
+			FROM transactions t
+			JOIN wallets sender_wallet ON sender_wallet.id = t.wallet_id
+			JOIN users sender ON sender.id = sender_wallet.user_id
+			JOIN transfer_details td ON td.transaction_id = t.id
+			JOIN wallets recipient_wallet ON recipient_wallet.id = td.recipient_wallet_id
+			WHERE recipient_wallet.user_id = $1
+				AND t.type = 'transfer'
+				AND t.status = 'success'
+		), filtered AS (
+			SELECT *
+			FROM history
+			WHERE $2 = ''
+				OR counterparty_name ILIKE '%' || $2 || '%'
+				OR COALESCE(counterparty_phone, '') ILIKE '%' || $2 || '%'
+				OR transaction_type ILIKE '%' || $2 || '%'
+				OR COALESCE(payment_method, '') ILIKE '%' || $2 || '%'
+				OR COALESCE(notes, '') ILIKE '%' || $2 || '%'
+		)
+	`
+
+	var total int
+	countQuery := baseQuery + `
+		SELECT COUNT(*)
+		FROM filtered;
+	`
+	if err := dbtx.QueryRow(ctx, countQuery, userId, search).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	itemQuery := baseQuery + `
+		SELECT
+			id,
+			transaction_type,
+			direction,
+			status,
+			amount,
+			counterparty_name,
+			counterparty_phone,
+			counterparty_photo,
+			payment_method,
+			notes,
+			created_at
+		FROM filtered
+		ORDER BY created_at DESC, id DESC
+		LIMIT $3
+		OFFSET $4;
+	`
+
+	rows, err := dbtx.Query(ctx, itemQuery, userId, search, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	items := []model.TransactionHistoryItem{}
+	for rows.Next() {
+		var item model.TransactionHistoryItem
+		if err := rows.Scan(
+			&item.Id,
+			&item.Type,
+			&item.Direction,
+			&item.Status,
+			&item.Amount,
+			&item.CounterpartyName,
+			&item.CounterpartyPhone,
+			&item.CounterpartyPhoto,
+			&item.PaymentMethod,
+			&item.Notes,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
+}
+
 func (tr *TransactionRepository) GetPaymentMethodById(ctx context.Context, dbtx DBTX, id int) (model.PaymentMethod, error) {
 	sql := `
 		SELECT id, name, logo, method, tax, created_at, updated_at
