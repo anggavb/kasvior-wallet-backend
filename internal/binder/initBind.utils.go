@@ -89,6 +89,7 @@ func initValidate() {
 				"image/png":  true,
 				"image/bmp":  true,
 				"image/heic": true,
+				"image/webp": true,
 			}
 
 			return allowedTypes[file.Header.Get("Content-Type")]
