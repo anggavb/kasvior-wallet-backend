@@ -9,7 +9,7 @@ COPY . .
 
 # -trimpath buat ngilangin path di binary
 # -ldflags="-s -w" buat ngilangin debug info biar ukuran binary lebih kecil
-RUN go build -trimpath -ldflags="-s -w" -o /out/kasvior-wallet ./cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/kasvior-wallet ./cmd
 
 FROM alpine:3.22
 
