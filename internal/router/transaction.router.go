@@ -16,7 +16,7 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) 
 	transactionService := service.NewTransactionService(transactionRepo, db)
 	transactionController := controller.NewTransactionController(transactionService)
 
-	transactionRouter := router.Group("/transaction", middleware.VerifyToken(authCache))
+	transactionRouter := router.Group("/transaction", middleware.VerifyJWT(), middleware.VerifyActiveToken(authCache))
 
 	{ // use for scoping route
 		transactionRouter.GET("/history", transactionController.FindHistory)

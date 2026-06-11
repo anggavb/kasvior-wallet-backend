@@ -17,7 +17,7 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	userService := service.NewUserService(userRepo, transactionRepo, authCache, db)
 	userController := controller.NewUserController(userService)
 
-	userRouter := router.Group("/users", middleware.VerifyToken(authCache))
+	userRouter := router.Group("/users", middleware.VerifyJWT(), middleware.VerifyActiveToken(authCache))
 
 	{
 		meRouter := userRouter.Group("/me")

@@ -14,7 +14,7 @@ import (
 	"github.com/kasvior-wallet-backend/pkg"
 )
 
-func VerifyToken(authCache *repository.AuthCacheRepository) gin.HandlerFunc {
+func VerifyJWT() gin.HandlerFunc {
 	return func(ctx *gin.Context) { // closure function
 		token, ok := jwttoken.VerifyClientToken(ctx)
 		if !ok {
@@ -34,14 +34,32 @@ func VerifyToken(authCache *repository.AuthCacheRepository) gin.HandlerFunc {
 			return
 		}
 
+		ctx.Set("claims", claims)
+		ctx.Set("token", token)
+		ctx.Next()
+	}
+}
+
+func VerifyActiveToken(authCache *repository.AuthCacheRepository) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		claims, ok := jwttoken.GetClaims(ctx)
+		if !ok {
+			response.JSONAbortUnauthorized(ctx)
+			return
+		}
+
+		token, ok := jwttoken.CheckAuthToken(ctx)
+		if !ok {
+			response.JSONAbortUnauthorized(ctx)
+			return
+		}
+
 		isActive, err := authCache.IsTokenActive(ctx.Request.Context(), hashToken(token), claims.UserId)
 		if !jwttoken.HandleTokenIsActive(ctx, isActive, err) {
 			response.JSONAbortUnauthorized(ctx)
 			return
 		}
 
-		ctx.Set("claims", claims)
-		ctx.Set("token", token)
 		ctx.Next()
 	}
 }
