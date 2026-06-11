@@ -629,7 +629,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/me/": {
+        "/users/me": {
             "get": {
                 "security": [
                     {

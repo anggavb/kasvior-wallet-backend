@@ -22,8 +22,8 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	{
 		meRouter := userRouter.Group("/me")
 
-		meRouter.GET("/", userController.GetProfile)
-		meRouter.PATCH("/", userController.UpdateProfile)
+		meRouter.GET("", userController.GetProfile)
+		meRouter.PATCH("", userController.UpdateProfile)
 		meRouter.PATCH("/password", userController.UpdatePassword)
 		meRouter.PATCH("/pin", userController.UpdatePin)
 		meRouter.POST("/pin/check", userController.CheckPin)

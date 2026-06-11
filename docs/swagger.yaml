@@ -618,7 +618,7 @@ paths:
       summary: Find transfer receivers
       tags:
       - Transactions
-  /users/me/:
+  /users/me:
     get:
       description: Get profile information for the authenticated user.
       produces:

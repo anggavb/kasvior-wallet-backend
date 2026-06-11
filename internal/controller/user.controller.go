@@ -37,7 +37,7 @@ func NewUserController(userService *service.UserService) *UserController {
 // @Success		200	{object}	dto.Response	"Get Profile Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
-// @Router			/users/me/ [get]
+// @Router			/users/me [get]
 func (uc *UserController) GetProfile(ctx *gin.Context) {
 	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
@@ -69,7 +69,7 @@ func (uc *UserController) GetProfile(ctx *gin.Context) {
 // @Failure		401		{object}	dto.Response					"Unauthorized"
 // @Failure		422		{object}	dto.Response					"Validation error"
 // @Failure		500		{object}	dto.Response					"Internal server error"
-// @Router			/users/me/ [patch]
+// @Router			/users/me [patch]
 func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {

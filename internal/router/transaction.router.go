@@ -22,9 +22,7 @@ func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) 
 		transactionRouter.GET("/history", transactionController.FindHistory)
 		transactionRouter.GET("/payment-methods", transactionController.FindPaymentMethods)
 		transactionRouter.POST("/topup", transactionController.CreateTopup)
-	}
 
-	{ // use for scoping route
 		transferRouter := transactionRouter.Group("/transfer")
 		transferRouter.POST("", transactionController.CreateTransfer)
 		transferRouter.GET("/receivers", transactionController.FindReceivers)
