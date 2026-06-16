@@ -11,7 +11,7 @@ COPY . .
 # -ldflags="-s -w" buat ngilangin debug info biar ukuran binary lebih kecil
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/kasvior-wallet ./cmd
 
-FROM alpine:3.22
+FROM alpine:3.24
 
 WORKDIR /app
 
