@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -15,14 +16,16 @@ import (
 type TransactionService struct {
 	db                    *pgxpool.Pool
 	transactionRepository *repository.TransactionRepository
+	dashboardCache        *repository.DashboardCacheRepository
 }
 
 const bankTopupDiscount = 4000
 
-func NewTransactionService(transactionRepository *repository.TransactionRepository, db *pgxpool.Pool) *TransactionService {
+func NewTransactionService(transactionRepository *repository.TransactionRepository, dashboardCache *repository.DashboardCacheRepository, db *pgxpool.Pool) *TransactionService {
 	return &TransactionService{
 		db:                    db,
 		transactionRepository: transactionRepository,
+		dashboardCache:        dashboardCache,
 	}
 }
 
@@ -179,6 +182,10 @@ func (ts *TransactionService) CreateTransactionWithDetails(ctx context.Context, 
 
 	if err := tx.Commit(ctx); err != nil {
 		return err
+	}
+
+	if err := ts.dashboardCache.InvalidateBalance(ctx, userId); err != nil {
+		log.Println("Error invalidating balance cache: ", err.Error())
 	}
 
 	return nil

@@ -12,8 +12,9 @@ import (
 
 func TransactionRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	authCache := repository.NewAuthCacheRepository(rdb)
+	dashboardCache := repository.NewDashboardCacheRepository(rdb)
 	transactionRepo := repository.NewTransactionRepository(db)
-	transactionService := service.NewTransactionService(transactionRepo, db)
+	transactionService := service.NewTransactionService(transactionRepo, dashboardCache, db)
 	transactionController := controller.NewTransactionController(transactionService)
 
 	transactionRouter := router.Group("/transaction", middleware.VerifyJWT(), middleware.VerifyActiveToken(authCache))

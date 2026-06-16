@@ -30,9 +30,15 @@ type UserUpdatePinRequest struct {
 	Pin string `json:"pin" binding:"required,len=6,numeric"`
 }
 
-type UserDashboardInformationResponse struct {
+type UserBalanceResponse struct {
 	Balance float64 `json:"balance"`
-	Income  float64 `json:"income"`
+}
+
+type UserIncomeResponse struct {
+	Income float64 `json:"income"`
+}
+
+type UserExpenseResponse struct {
 	Expense float64 `json:"expense"`
 }
 

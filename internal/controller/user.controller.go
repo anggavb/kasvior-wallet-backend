@@ -276,30 +276,82 @@ func (uc *UserController) CheckPin(ctx *gin.Context) {
 	response.JSONSuccess(ctx, res, "PIN Valid")
 }
 
-// GetDashboardInformation godoc
-// @Summary		Get current user wallet dashboard
-// @Description	Get balance, income, and expense information for the authenticated user.
+// GetBalance godoc
+// @Summary		Get current user balance
+// @Description	Get balance information for the authenticated user.
 // @Tags			Users
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Success		200	{object}	dto.Response	"Get Dashboard Information Successfully"
+// @Success		200	{object}	dto.Response{data=dto.UserBalanceResponse}	"Get Balance Successfully"
 // @Failure		401	{object}	dto.Response	"Unauthorized"
 // @Failure		500	{object}	dto.Response	"Internal server error"
-// @Router			/users/me/wallet [get]
-func (uc *UserController) GetDashboardInformation(ctx *gin.Context) {
+// @Router			/users/me/balance [get]
+func (uc *UserController) GetBalance(ctx *gin.Context) {
 	claims, ok := jwttoken.GetClaims(ctx)
 	if !ok {
 		return
 	}
 
-	res, err := uc.userService.GetDashboardInformation(ctx.Request.Context(), claims.UserId)
+	res, err := uc.userService.GetBalance(ctx.Request.Context(), claims.UserId)
 	if err != nil {
 		log.Println("Error: ", err.Error())
 		response.JSONInternalServerError(ctx)
 		return
 	}
 
-	response.JSONSuccess(ctx, res, "Get Dashboard Information Successfully")
+	response.JSONSuccess(ctx, res, "Get Balance Successfully")
+}
+
+// GetIncome godoc
+// @Summary		Get current user income
+// @Description	Get income information for the authenticated user.
+// @Tags			Users
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	dto.Response{data=dto.UserIncomeResponse}	"Get Income Successfully"
+// @Failure		401	{object}	dto.Response	"Unauthorized"
+// @Failure		500	{object}	dto.Response	"Internal server error"
+// @Router			/users/me/income [get]
+func (uc *UserController) GetIncome(ctx *gin.Context) {
+	claims, ok := jwttoken.GetClaims(ctx)
+	if !ok {
+		return
+	}
+
+	res, err := uc.userService.GetIncome(ctx.Request.Context(), claims.UserId)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, res, "Get Income Successfully")
+}
+
+// GetExpense godoc
+// @Summary		Get current user expense
+// @Description	Get expense information for the authenticated user.
+// @Tags			Users
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	dto.Response{data=dto.UserExpenseResponse}	"Get Expense Successfully"
+// @Failure		401	{object}	dto.Response	"Unauthorized"
+// @Failure		500	{object}	dto.Response	"Internal server error"
+// @Router			/users/me/expense [get]
+func (uc *UserController) GetExpense(ctx *gin.Context) {
+	claims, ok := jwttoken.GetClaims(ctx)
+	if !ok {
+		return
+	}
+
+	res, err := uc.userService.GetExpense(ctx.Request.Context(), claims.UserId)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		response.JSONInternalServerError(ctx)
+		return
+	}
+
+	response.JSONSuccess(ctx, res, "Get Expense Successfully")
 }
 
 // GetTransactionReport godoc

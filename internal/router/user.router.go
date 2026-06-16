@@ -12,9 +12,10 @@ import (
 
 func UserRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 	authCache := repository.NewAuthCacheRepository(rdb)
+	dashboardCache := repository.NewDashboardCacheRepository(rdb)
 	userRepo := repository.NewUserRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
-	userService := service.NewUserService(userRepo, transactionRepo, authCache, db)
+	userService := service.NewUserService(userRepo, transactionRepo, authCache, dashboardCache, db)
 	userController := controller.NewUserController(userService)
 
 	userRouter := router.Group("/users", middleware.VerifyJWT(), middleware.VerifyActiveToken(authCache))
@@ -27,7 +28,9 @@ func UserRouter(router *gin.Engine, db *pgxpool.Pool, rdb *redis.Client) {
 		meRouter.PATCH("/password", userController.UpdatePassword)
 		meRouter.PATCH("/pin", userController.UpdatePin)
 		meRouter.POST("/pin/check", userController.CheckPin)
-		meRouter.GET("/wallet", userController.GetDashboardInformation)
+		meRouter.GET("/balance", userController.GetBalance)
+		meRouter.GET("/income", userController.GetIncome)
+		meRouter.GET("/expense", userController.GetExpense)
 		meRouter.GET("/transaction-report", userController.GetTransactionReport)
 	}
 }

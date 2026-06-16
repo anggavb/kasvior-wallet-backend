@@ -348,11 +348,13 @@ func (tr *TransactionRepository) GetPendingTransferForUpdate(ctx context.Context
 			t.id,
 			t.wallet_id::text,
 			td.recipient_wallet_id::text,
+			recipient_wallet.user_id,
 			t.amount,
 			t.status
 		FROM transactions t
 		JOIN wallets w ON w.id = t.wallet_id
 		JOIN transfer_details td ON td.transaction_id = t.id
+		JOIN wallets recipient_wallet ON recipient_wallet.id = td.recipient_wallet_id
 		WHERE t.id = $1
 			AND w.user_id = $2
 			AND t.type = 'transfer'
@@ -364,6 +366,7 @@ func (tr *TransactionRepository) GetPendingTransferForUpdate(ctx context.Context
 		&transfer.Id,
 		&transfer.SenderWalletId,
 		&transfer.RecipientWalletId,
+		&transfer.RecipientUserId,
 		&transfer.Amount,
 		&transfer.Status,
 	); err != nil {

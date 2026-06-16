@@ -24,6 +24,7 @@ type TransferTransaction struct {
 	Id                int
 	SenderWalletId    string
 	RecipientWalletId string
+	RecipientUserId   int
 	Amount            float64
 	Status            string
 }

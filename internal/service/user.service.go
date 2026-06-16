@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -19,14 +20,16 @@ type UserService struct {
 	userRepository        *repository.UserRepository
 	transactionRepository *repository.TransactionRepository
 	authCache             *repository.AuthCacheRepository
+	dashboardCache        *repository.DashboardCacheRepository
 }
 
-func NewUserService(userRepository *repository.UserRepository, transactionRepository *repository.TransactionRepository, authCache *repository.AuthCacheRepository, db *pgxpool.Pool) *UserService {
+func NewUserService(userRepository *repository.UserRepository, transactionRepository *repository.TransactionRepository, authCache *repository.AuthCacheRepository, dashboardCache *repository.DashboardCacheRepository, db *pgxpool.Pool) *UserService {
 	return &UserService{
 		db:                    db,
 		userRepository:        userRepository,
 		transactionRepository: transactionRepository,
 		authCache:             authCache,
+		dashboardCache:        dashboardCache,
 	}
 }
 
@@ -159,20 +162,84 @@ func (us *UserService) confirmTransfer(ctx context.Context, userId int, storedPi
 		return err
 	}
 
-	return tx.Commit(ctx)
-}
-
-func (us *UserService) GetDashboardInformation(ctx context.Context, userId int) (dto.UserDashboardInformationResponse, error) {
-	dashboard, err := us.userRepository.GetDashboardInformationById(ctx, userId)
-	if err != nil {
-		return dto.UserDashboardInformationResponse{}, err
+	if err := tx.Commit(ctx); err != nil {
+		return err
 	}
 
-	return dto.UserDashboardInformationResponse{
-		Balance: dashboard.Balance,
-		Income:  dashboard.Income,
-		Expense: dashboard.Expense,
-	}, nil
+	us.invalidateSuccessfulTransferDashboard(ctx, userId, transfer.RecipientUserId)
+	return nil
+}
+
+func (us *UserService) GetBalance(ctx context.Context, userId int) (dto.UserBalanceResponse, error) {
+	if balance, ok, err := us.dashboardCache.GetBalance(ctx, userId); err == nil && ok {
+		return dto.UserBalanceResponse{Balance: balance}, nil
+	} else if err != nil {
+		log.Println("Error reading balance cache: ", err.Error())
+	}
+
+	balance, err := us.userRepository.GetBalanceById(ctx, userId)
+	if err != nil {
+		return dto.UserBalanceResponse{}, err
+	}
+
+	if err := us.dashboardCache.SetBalance(ctx, userId, balance); err != nil {
+		log.Println("Error setting balance cache: ", err.Error())
+	}
+
+	return dto.UserBalanceResponse{Balance: balance}, nil
+}
+
+func (us *UserService) GetIncome(ctx context.Context, userId int) (dto.UserIncomeResponse, error) {
+	if income, ok, err := us.dashboardCache.GetIncome(ctx, userId); err == nil && ok {
+		return dto.UserIncomeResponse{Income: income}, nil
+	} else if err != nil {
+		log.Println("Error reading income cache: ", err.Error())
+	}
+
+	income, err := us.userRepository.GetIncomeById(ctx, userId)
+	if err != nil {
+		return dto.UserIncomeResponse{}, err
+	}
+
+	if err := us.dashboardCache.SetIncome(ctx, userId, income); err != nil {
+		log.Println("Error setting income cache: ", err.Error())
+	}
+
+	return dto.UserIncomeResponse{Income: income}, nil
+}
+
+func (us *UserService) GetExpense(ctx context.Context, userId int) (dto.UserExpenseResponse, error) {
+	if expense, ok, err := us.dashboardCache.GetExpense(ctx, userId); err == nil && ok {
+		return dto.UserExpenseResponse{Expense: expense}, nil
+	} else if err != nil {
+		log.Println("Error reading expense cache: ", err.Error())
+	}
+
+	expense, err := us.userRepository.GetExpenseById(ctx, userId)
+	if err != nil {
+		return dto.UserExpenseResponse{}, err
+	}
+
+	if err := us.dashboardCache.SetExpense(ctx, userId, expense); err != nil {
+		log.Println("Error setting expense cache: ", err.Error())
+	}
+
+	return dto.UserExpenseResponse{Expense: expense}, nil
+}
+
+func (us *UserService) invalidateSuccessfulTransferDashboard(ctx context.Context, senderUserId, recipientUserId int) {
+	if err := us.dashboardCache.InvalidateBalance(ctx, senderUserId); err != nil {
+		log.Println("Error invalidating sender balance cache: ", err.Error())
+	}
+	if err := us.dashboardCache.InvalidateExpense(ctx, senderUserId); err != nil {
+		log.Println("Error invalidating sender expense cache: ", err.Error())
+	}
+	if err := us.dashboardCache.InvalidateBalance(ctx, recipientUserId); err != nil {
+		log.Println("Error invalidating recipient balance cache: ", err.Error())
+	}
+	if err := us.dashboardCache.InvalidateIncome(ctx, recipientUserId); err != nil {
+		log.Println("Error invalidating recipient income cache: ", err.Error())
+	}
 }
 
 func (us *UserService) GetTransactionReport(ctx context.Context, userId int, reportType string) ([]dto.UserTransactionReportResponse, error) {

@@ -128,37 +128,56 @@ func (ur *UserRepository) UpdatePinById(ctx context.Context, userId int, pin str
 	return err
 }
 
-func (ur *UserRepository) GetDashboardInformationById(ctx context.Context, userId int) (model.UserDashboardInformation, error) {
+func (ur *UserRepository) GetBalanceById(ctx context.Context, userId int) (float64, error) {
 	sqlQuery := `
-		SELECT
-			w.balance AS balance,
-			SUM(
-				CASE
-					WHEN t.status = 'success' AND t.type = 'transfer' AND t.wallet_id != w.id
-					THEN t.amount
-					ELSE 0
-				END
-			) AS income,
-			SUM(
-				CASE
-					WHEN t.status = 'success' AND t.type = 'transfer' AND t.wallet_id = w.id
-					THEN t.amount
-					ELSE 0
-				END
-			) AS expense
-		FROM wallets w
-		LEFT JOIN transactions t ON t.wallet_id = w.id
-		WHERE w.user_id = $1
-		GROUP BY w.balance;
+		SELECT balance
+		FROM wallets
+		WHERE user_id = $1;
 	`
-	args := []any{userId}
 
-	var dashboard model.UserDashboardInformation
-	if err := ur.db.QueryRow(ctx, sqlQuery, args...).Scan(&dashboard.Balance, &dashboard.Income, &dashboard.Expense); err != nil {
-		return model.UserDashboardInformation{}, err
+	var balance float64
+	if err := ur.db.QueryRow(ctx, sqlQuery, userId).Scan(&balance); err != nil {
+		return 0, err
 	}
 
-	return dashboard, nil
+	return balance, nil
+}
+
+func (ur *UserRepository) GetIncomeById(ctx context.Context, userId int) (float64, error) {
+	sqlQuery := `
+		SELECT COALESCE(SUM(t.amount), 0)
+		FROM transactions t
+		JOIN transfer_details td ON td.transaction_id = t.id
+		JOIN wallets recipient_wallet ON recipient_wallet.id = td.recipient_wallet_id
+		WHERE recipient_wallet.user_id = $1
+			AND t.type = 'transfer'
+			AND t.status = 'success';
+	`
+
+	var income float64
+	if err := ur.db.QueryRow(ctx, sqlQuery, userId).Scan(&income); err != nil {
+		return 0, err
+	}
+
+	return income, nil
+}
+
+func (ur *UserRepository) GetExpenseById(ctx context.Context, userId int) (float64, error) {
+	sqlQuery := `
+		SELECT COALESCE(SUM(t.amount), 0)
+		FROM transactions t
+		JOIN wallets sender_wallet ON sender_wallet.id = t.wallet_id
+		WHERE sender_wallet.user_id = $1
+			AND t.type = 'transfer'
+			AND t.status = 'success';
+	`
+
+	var expense float64
+	if err := ur.db.QueryRow(ctx, sqlQuery, userId).Scan(&expense); err != nil {
+		return 0, err
+	}
+
+	return expense, nil
 }
 
 func (ur *UserRepository) GetTransactionReportById(ctx context.Context, userId int, reportType string, startDate, endDate time.Time) ([]model.UserTransactionReport, error) {

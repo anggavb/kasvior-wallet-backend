@@ -193,6 +193,11 @@ definitions:
     - amount
     - recipient_wallet_id
     type: object
+  dto.UserBalanceResponse:
+    properties:
+      balance:
+        type: number
+    type: object
   dto.UserCheckPinRequest:
     properties:
       pin:
@@ -201,6 +206,16 @@ definitions:
         type: integer
     required:
     - pin
+    type: object
+  dto.UserExpenseResponse:
+    properties:
+      expense:
+        type: number
+    type: object
+  dto.UserIncomeResponse:
+    properties:
+      income:
+        type: number
     type: object
   dto.UserUpdatePasswordRequest:
     properties:
@@ -689,6 +704,90 @@ paths:
       summary: Update current user profile
       tags:
       - Users
+  /users/me/balance:
+    get:
+      description: Get balance information for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Balance Successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserBalanceResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user balance
+      tags:
+      - Users
+  /users/me/expense:
+    get:
+      description: Get expense information for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Expense Successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserExpenseResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user expense
+      tags:
+      - Users
+  /users/me/income:
+    get:
+      description: Get income information for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Income Successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserIncomeResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user income
+      tags:
+      - Users
   /users/me/password:
     patch:
       consumes:
@@ -859,30 +958,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get current user transaction report
-      tags:
-      - Users
-  /users/me/wallet:
-    get:
-      description: Get balance, income, and expense information for the authenticated
-        user.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Get Dashboard Information Successfully
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/dto.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Get current user wallet dashboard
       tags:
       - Users
 securityDefinitions:
