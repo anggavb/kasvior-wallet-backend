@@ -16,7 +16,7 @@ FROM alpine:3.24
 WORKDIR /app
 
 # ca-certificates buat nanti kalo dah pake VPS, tzdata buat timezone datetime
-RUN apk add --no-cache ca-certificates tzdata \
+RUN apk add --no-cache tzdata \
   && addgroup -S app \
   && adduser -S -G app app \
   && mkdir -p /app/public/img \
